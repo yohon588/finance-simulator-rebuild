@@ -1,3 +1,10 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const schemaPath = path.resolve(currentDir, "../db/schema.sql");
+
 export async function createPostgresRepository(connectionString) {
   const { Client } = await import("pg");
 
@@ -6,6 +13,9 @@ export async function createPostgresRepository(connectionString) {
   });
 
   await client.connect();
+
+  const schemaSql = fs.readFileSync(schemaPath, "utf8");
+  await client.query(schemaSql);
 
   await client.query(`
     create table if not exists classroom_runtime_snapshots (
