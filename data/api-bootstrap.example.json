@@ -1,0 +1,34 @@
+{
+  "classroom": {
+    "id": "room-demo",
+    "code": "FIN-DEMO",
+    "name": "Finance Class Demo",
+    "teacherName": "Demo Teacher",
+    "status": "draft"
+  },
+  "round": {
+    "id": "round-1",
+    "no": 1,
+    "status": "draft",
+    "eventId": null,
+    "costIndex": 1
+  },
+  "moduleConfig": {
+    "core": {
+      "budget": true,
+      "debt": true,
+      "invest": true,
+      "macro": true,
+      "behavior": true,
+      "anti_fraud": true,
+      "dice": true
+    },
+    "opt": {
+      "education": false,
+      "retirement": false,
+      "tax": false,
+      "legacy": false,
+      "realestate": true
+    }
+  }
+}

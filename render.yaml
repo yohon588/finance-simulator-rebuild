@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: finance-simulator-rebuild
+    env: node
+    plan: starter
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: PORT
+        value: 3100
+      - key: DATABASE_URL
+        sync: false

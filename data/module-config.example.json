@@ -1,0 +1,18 @@
+{
+  "core": {
+    "budget": true,
+    "debt": true,
+    "invest": true,
+    "macro": true,
+    "behavior": true,
+    "anti_fraud": true,
+    "dice": true
+  },
+  "opt": {
+    "education": false,
+    "retirement": true,
+    "tax": true,
+    "legacy": false,
+    "realestate": true
+  }
+}

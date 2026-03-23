@@ -1,0 +1,322 @@
+[
+  {
+    "eventId": 1,
+    "title": "AI rally lifts risk appetite",
+    "teachingPoints": ["risk appetite", "allocation discipline", "diversification"],
+    "transmissionPath": "positive innovation news -> equity momentum -> higher upside and higher temptation",
+    "marketProfile": "innovation_boom",
+    "weight": 8
+  },
+  {
+    "eventId": 2,
+    "title": "Housing costs rise across the city",
+    "teachingPoints": ["housing pressure", "cash buffer", "fixed costs"],
+    "transmissionPath": "rent pressure -> higher mandatory expenses -> lower emergency runway",
+    "marketProfile": "housing_cost_shock",
+    "weight": 7
+  },
+  {
+    "eventId": 3,
+    "title": "Rates stabilize and bonds recover",
+    "teachingPoints": ["interest rates", "duration", "defensive assets"],
+    "transmissionPath": "rate stability -> bond recovery -> smoother returns for defensive positioning",
+    "marketProfile": "rate_relief",
+    "weight": 6
+  },
+  {
+    "eventId": 4,
+    "title": "Platform layoffs cool growth expectations",
+    "teachingPoints": ["income shock", "human capital", "reserve planning"],
+    "transmissionPath": "job market stress -> weaker salary confidence -> more value in liquidity",
+    "marketProfile": "layoff_stress",
+    "weight": 7
+  },
+  {
+    "eventId": 5,
+    "title": "Export demand rebounds",
+    "teachingPoints": ["cyclical recovery", "career upside", "timing risk"],
+    "transmissionPath": "stronger demand -> higher business sentiment -> more upside for growth assets",
+    "marketProfile": "export_rebound",
+    "weight": 6
+  },
+  {
+    "eventId": 6,
+    "title": "Consumer confidence weakens",
+    "teachingPoints": ["spending slowdown", "debt service", "stress testing"],
+    "transmissionPath": "soft demand -> weaker earnings -> more fragile cash flow for levered households",
+    "marketProfile": "consumer_slowdown",
+    "weight": 7
+  },
+  {
+    "eventId": 7,
+    "title": "Crypto speculation surges again",
+    "teachingPoints": ["speculation", "volatility", "fraud awareness"],
+    "transmissionPath": "high-risk narratives spread -> momentum chasing -> wider outcome dispersion",
+    "marketProfile": "crypto_mania",
+    "weight": 5
+  },
+  {
+    "eventId": 8,
+    "title": "Utility and medical prices climb",
+    "teachingPoints": ["inflation", "living cost resilience", "insurance value"],
+    "transmissionPath": "price increases -> higher essential spending -> less room for mistakes",
+    "marketProfile": "essential_inflation",
+    "weight": 8
+  },
+  {
+    "eventId": 9,
+    "title": "Healthcare reform lowers routine treatment costs",
+    "teachingPoints": ["insurance", "cost planning", "health resilience"],
+    "transmissionPath": "better reimbursement -> lower treatment burden -> stronger value of health planning",
+    "marketProfile": "healthcare_relief",
+    "weight": 5
+  },
+  {
+    "eventId": 10,
+    "title": "Tax enforcement tightens on side income",
+    "teachingPoints": ["tax reserve", "cash discipline", "income quality"],
+    "transmissionPath": "stricter reporting -> less disposable income -> more value in tax reserves",
+    "marketProfile": "tax_tightening",
+    "weight": 6
+  },
+  {
+    "eventId": 11,
+    "title": "AI hardware correction hits crowded trades",
+    "teachingPoints": ["valuation risk", "concentration", "drawdown management"],
+    "transmissionPath": "crowded growth positioning unwinds -> tech names correct -> high beta assets suffer first",
+    "marketProfile": "innovation_correction",
+    "weight": 6
+  },
+  {
+    "eventId": 12,
+    "title": "Manufacturing upgrade cycle lifts skilled jobs",
+    "teachingPoints": ["human capital", "skills premium", "career optionality"],
+    "transmissionPath": "industrial investment improves -> skills demand rises -> learning compounds into income upside",
+    "marketProfile": "skill_upgrade",
+    "weight": 6
+  },
+  {
+    "eventId": 13,
+    "title": "Holiday tourism boom boosts services demand",
+    "teachingPoints": ["seasonality", "service income", "spending temptation"],
+    "transmissionPath": "travel demand surges -> service incomes improve -> lifestyle spending also rises",
+    "marketProfile": "tourism_boom",
+    "weight": 5
+  },
+  {
+    "eventId": 14,
+    "title": "Major fraud crackdown cools platform hype",
+    "teachingPoints": ["fraud awareness", "platform risk", "risk filtering"],
+    "transmissionPath": "regulatory cleanup -> weaker hype trades -> safer behavior gains relative advantage",
+    "marketProfile": "fraud_crackdown",
+    "weight": 5
+  },
+  {
+    "eventId": 15,
+    "title": "Upskilling grants expand for young workers",
+    "teachingPoints": ["education ROI", "skills investment", "career leverage"],
+    "transmissionPath": "training support improves -> learning becomes cheaper -> human capital payoff rises",
+    "marketProfile": "upskill_grants",
+    "weight": 5
+  },
+  {
+    "eventId": 16,
+    "title": "Energy prices spike and transport costs jump",
+    "teachingPoints": ["inflation pass-through", "vehicle costs", "budget flexibility"],
+    "transmissionPath": "fuel and logistics costs rise -> everyday budgets tighten -> vehicle ownership becomes heavier",
+    "marketProfile": "energy_shock",
+    "weight": 7
+  },
+  {
+    "eventId": 17,
+    "title": "Remote work demand revives digital service tools",
+    "teachingPoints": ["remote work", "software demand", "productivity tools"],
+    "transmissionPath": "distributed work expands -> software and digital services see stronger demand -> tool spending competes with savings",
+    "marketProfile": "remote_work_boost",
+    "weight": 5
+  },
+  {
+    "eventId": 18,
+    "title": "Credit standards tighten for young borrowers",
+    "teachingPoints": ["credit access", "borrowing capacity", "cash reserves"],
+    "transmissionPath": "lenders turn cautious -> financing gets harder -> liquidity and debt discipline matter more",
+    "marketProfile": "credit_tightening",
+    "weight": 7
+  },
+  {
+    "eventId": 19,
+    "title": "Insurance awareness jumps after a public health scare",
+    "teachingPoints": ["risk transfer", "insurance", "preparedness"],
+    "transmissionPath": "headline risk rises -> households value protection more -> insurance and reserves gain relevance",
+    "marketProfile": "insurance_awareness",
+    "weight": 5
+  },
+  {
+    "eventId": 20,
+    "title": "Content platform algorithm favors educational creators",
+    "teachingPoints": ["creator economy", "skills compounding", "side income"],
+    "transmissionPath": "platform distribution shifts -> educational content earns more visibility -> learning and creator effort compound",
+    "marketProfile": "creator_education_up",
+    "weight": 5
+  },
+  {
+    "eventId": 21,
+    "title": "Import costs rise after a weaker currency move",
+    "teachingPoints": ["currency shock", "imported inflation", "price pass-through"],
+    "transmissionPath": "currency weakens -> imported goods cost more -> essentials and devices become less forgiving",
+    "marketProfile": "currency_pressure",
+    "weight": 6
+  },
+  {
+    "eventId": 22,
+    "title": "Public transport upgrade reduces commuting stress",
+    "teachingPoints": ["mobility", "cost relief", "fixed expense flexibility"],
+    "transmissionPath": "commuting improves -> transport friction falls -> daily budget regains breathing room",
+    "marketProfile": "transport_relief",
+    "weight": 4
+  },
+  {
+    "eventId": 23,
+    "title": "Retail coupon war boosts short-term consumption",
+    "teachingPoints": ["consumption temptation", "budget leakage", "self-control"],
+    "transmissionPath": "discount messaging intensifies -> short-term purchases look attractive -> discipline gets tested",
+    "marketProfile": "consumption_temptation",
+    "weight": 4
+  },
+  {
+    "eventId": 24,
+    "title": "Pension policy discussion pushes long-term planning",
+    "teachingPoints": ["retirement", "long-term planning", "future cash flow"],
+    "transmissionPath": "future pension pressure becomes visible -> long-horizon planning matters more -> present spending is reevaluated",
+    "marketProfile": "retirement_focus",
+    "weight": 5
+  },
+  {
+    "eventId": 25,
+    "title": "Domestic travel platforms enter a pricing war",
+    "teachingPoints": ["pricing pressure", "consumer temptation", "travel demand"],
+    "transmissionPath": "cheaper leisure options appear -> spending temptation rises -> budgets are tested against goals",
+    "marketProfile": "consumption_temptation",
+    "weight": 4
+  },
+  {
+    "eventId": 26,
+    "title": "Cloud software subscriptions become standard at work",
+    "teachingPoints": ["tooling", "productivity", "software dependence"],
+    "transmissionPath": "digital tools become essential -> productivity rises -> subscription costs also normalize",
+    "marketProfile": "remote_work_boost",
+    "weight": 5
+  },
+  {
+    "eventId": 27,
+    "title": "Hospitals promote preventive screening packages",
+    "teachingPoints": ["prevention", "health management", "small costs vs large shocks"],
+    "transmissionPath": "preventive care is encouraged -> small planned costs replace some large surprise costs",
+    "marketProfile": "healthcare_relief",
+    "weight": 4
+  },
+  {
+    "eventId": 28,
+    "title": "New anti-scam campaign reaches major social platforms",
+    "teachingPoints": ["fraud awareness", "cyber protection", "behavioral guardrails"],
+    "transmissionPath": "fraud education rises -> scams become easier to spot -> prepared users lose less",
+    "marketProfile": "fraud_crackdown",
+    "weight": 4
+  },
+  {
+    "eventId": 29,
+    "title": "Export manufacturers speed up automation hiring",
+    "teachingPoints": ["automation", "reskilling", "career resilience"],
+    "transmissionPath": "firms invest in automation -> higher demand for adaptive workers -> upskilling pays off faster",
+    "marketProfile": "skill_upgrade",
+    "weight": 5
+  },
+  {
+    "eventId": 30,
+    "title": "Mortgage policy eases for first-time buyers",
+    "teachingPoints": ["housing access", "leverage", "cash lock"],
+    "transmissionPath": "buying becomes easier -> home ownership looks attractive -> fixed costs can still tighten liquidity",
+    "marketProfile": "housing_cost_shock",
+    "weight": 5
+  },
+  {
+    "eventId": 31,
+    "title": "Luxury consumption sentiment cools after weak earnings",
+    "teachingPoints": ["confidence", "status spending", "income quality"],
+    "transmissionPath": "prestige consumption weakens -> high-end names slow -> lifestyle inflation looks less justified",
+    "marketProfile": "consumer_slowdown",
+    "weight": 5
+  },
+  {
+    "eventId": 32,
+    "title": "Bond funds attract cautious household money",
+    "teachingPoints": ["defense", "yield stability", "risk-off allocation"],
+    "transmissionPath": "risk appetite softens -> defensive flows rise -> steadier assets regain attention",
+    "marketProfile": "rate_relief",
+    "weight": 4
+  },
+  {
+    "eventId": 33,
+    "title": "Social commerce creators see higher ad conversion",
+    "teachingPoints": ["creator monetization", "attention economy", "side income"],
+    "transmissionPath": "attention converts better -> creator-side income improves -> discipline still matters",
+    "marketProfile": "creator_education_up",
+    "weight": 5
+  },
+  {
+    "eventId": 34,
+    "title": "Imported hardware prices rise before a major shopping season",
+    "teachingPoints": ["device inflation", "replacement timing", "planned spending"],
+    "transmissionPath": "hardware gets pricier -> device failures hurt more -> maintenance and timing become valuable",
+    "marketProfile": "currency_pressure",
+    "weight": 5
+  },
+  {
+    "eventId": 35,
+    "title": "Commuter rail expansion lowers daily transport stress",
+    "teachingPoints": ["commuting", "cash relief", "mobility choices"],
+    "transmissionPath": "faster commuting reduces friction -> some vehicle pressure eases -> flexible budgeting improves",
+    "marketProfile": "transport_relief",
+    "weight": 4
+  },
+  {
+    "eventId": 36,
+    "title": "Startup hiring rebounds after a funding thaw",
+    "teachingPoints": ["career optionality", "growth assets", "income opportunity"],
+    "transmissionPath": "funding conditions improve -> hiring resumes -> confidence and growth narratives return",
+    "marketProfile": "innovation_boom",
+    "weight": 5
+  },
+  {
+    "eventId": 37,
+    "title": "Online broker margin warnings reduce leverage appetite",
+    "teachingPoints": ["leverage", "drawdown control", "speculation discipline"],
+    "transmissionPath": "risk warnings rise -> leveraged speculation cools -> capital preservation improves in relative value",
+    "marketProfile": "innovation_correction",
+    "weight": 5
+  },
+  {
+    "eventId": 38,
+    "title": "Freelance tax filing season exposes poor recordkeeping",
+    "teachingPoints": ["tax admin", "cash planning", "documentation discipline"],
+    "transmissionPath": "filing pressure arrives -> unprepared earners lose flexibility -> tax reserves prove their value",
+    "marketProfile": "tax_tightening",
+    "weight": 5
+  },
+  {
+    "eventId": 39,
+    "title": "Community health subsidies encourage early treatment",
+    "teachingPoints": ["public health", "planned care", "resilience"],
+    "transmissionPath": "small subsidies lower first-step care costs -> prevention becomes easier -> reserves last longer",
+    "marketProfile": "insurance_awareness",
+    "weight": 4
+  },
+  {
+    "eventId": 40,
+    "title": "Retirement seminars make compounding feel urgent",
+    "teachingPoints": ["compounding", "retirement awareness", "delayed gratification"],
+    "transmissionPath": "future needs become more tangible -> present trade-offs get clearer -> long-term saving discipline strengthens",
+    "marketProfile": "retirement_focus",
+    "weight": 4
+  }
+]

@@ -1,0 +1,326 @@
+[
+  {
+    "id": "D1-01",
+    "category": "health",
+    "title": "Chronic checkup",
+    "story": "A health check and medicine purchase became unavoidable this month.",
+    "baseEffect": { "cash": -1200, "income": 0, "debt": 0 },
+    "knowledgePoint": "Medical shocks are low-frequency but high-impact, so reserves and protection matter.",
+    "teacherNote": "Explain emergency savings and insurance as two layers of protection."
+  },
+  {
+    "id": "D1-02",
+    "category": "health",
+    "title": "Flu and missed work",
+    "story": "You lose a few working days because of a flu episode.",
+    "baseEffect": { "cash": -300, "income": -0.04, "debt": 0 },
+    "knowledgePoint": "Health events can hurt both income and expenses at the same time.",
+    "teacherNote": "Use this to explain why liquidity matters even without a large hospital bill."
+  },
+  {
+    "id": "D1-03",
+    "category": "health",
+    "title": "Dental treatment",
+    "story": "A delayed dental problem now requires treatment and medicine.",
+    "baseEffect": { "cash": -800, "income": 0, "debt": 0 },
+    "knowledgePoint": "Delaying small care needs often makes the bill larger later.",
+    "teacherNote": "Contrast prevention spending with emergency spending."
+  },
+  {
+    "id": "D1-04",
+    "category": "health",
+    "title": "Minor injury treatment",
+    "story": "A sports or commute injury leads to scans and physical therapy.",
+    "baseEffect": { "cash": -1500, "income": 0, "debt": 0 },
+    "knowledgePoint": "Accident insurance is for low-probability but painful losses.",
+    "teacherNote": "Use this to compare health cover with accident cover."
+  },
+  {
+    "id": "D1-05",
+    "category": "health",
+    "title": "Mental health support",
+    "story": "You pay for a counseling session after a stressful month.",
+    "baseEffect": { "cash": -600, "income": 0, "debt": 0 },
+    "knowledgePoint": "Mental health also affects financial decision quality and resilience.",
+    "teacherNote": "Link stress, impulsive choices, and risk tolerance."
+  },
+  {
+    "id": "D1-06",
+    "category": "health",
+    "title": "Family medical transfer",
+    "story": "A family member needs urgent support and you transfer money home.",
+    "baseEffect": { "cash": -2000, "income": 0, "debt": 0 },
+    "knowledgePoint": "Family obligations are part of real-life financial planning.",
+    "teacherNote": "Discuss caregiving, family support, and why reserves should not only cover the self."
+  },
+  {
+    "id": "D2-01",
+    "category": "housing",
+    "title": "Broken water heater",
+    "story": "The landlord covers part of it, but you still pay for the repair.",
+    "baseEffect": { "cash": -500, "income": 0, "debt": 0 },
+    "knowledgePoint": "Housing costs include maintenance and surprise spending, not just rent.",
+    "teacherNote": "Good example for fixed cost pressure."
+  },
+  {
+    "id": "D2-02",
+    "category": "housing",
+    "title": "Forced move",
+    "story": "A sudden move means paying transport, deposits, and setup costs.",
+    "baseEffect": { "cash": -1800, "income": 0, "debt": 0 },
+    "knowledgePoint": "Moving shocks are classic one-time cash flow hits.",
+    "teacherNote": "Use this to compare reserves versus bridge debt."
+  },
+  {
+    "id": "D2-03",
+    "category": "housing",
+    "title": "Air-conditioner repair",
+    "story": "A home cooling issue creates an urgent repair bill.",
+    "baseEffect": { "cash": -700, "income": 0, "debt": 0 },
+    "knowledgePoint": "Not every important cost is monthly, but many are inevitable over time.",
+    "teacherNote": "Useful for discussing maintenance budgeting."
+  },
+  {
+    "id": "D2-04",
+    "category": "housing",
+    "title": "Parents need support this month",
+    "story": "Your family budget tightens and you are asked to contribute more.",
+    "baseEffect": { "cash": -1000, "income": 0, "debt": 0 },
+    "knowledgePoint": "Family support and reverse support are real cash flow variables for young adults.",
+    "teacherNote": "Use salary-based scaling to show why the same event does not hit everyone equally."
+  },
+  {
+    "id": "D2-05",
+    "category": "housing",
+    "title": "Property rule fine",
+    "story": "A parking or utility rule breach creates a small but annoying penalty.",
+    "baseEffect": { "cash": -300, "income": 0, "debt": 0 },
+    "knowledgePoint": "Small compliance failures often become friction costs.",
+    "teacherNote": "Show how preventable mistakes erode cash flow."
+  },
+  {
+    "id": "D2-06",
+    "category": "housing",
+    "title": "Rent top-up",
+    "story": "Renewing your lease now requires a higher payment.",
+    "baseEffect": { "cash": -500, "income": 0, "debt": 0 },
+    "knowledgePoint": "Some shocks raise future costs, not just one-time expenses.",
+    "teacherNote": "Connect this with fixed cost lock and emergency months."
+  },
+  {
+    "id": "D3-01",
+    "category": "consumption",
+    "title": "Phone screen repair",
+    "story": "Your phone breaks and needs repair to stay usable.",
+    "baseEffect": { "cash": -600, "income": 0, "debt": 0 },
+    "knowledgePoint": "Small equipment failures are common and should be planned for.",
+    "teacherNote": "Good moment to distinguish maintenance from impulsive upgrades."
+  },
+  {
+    "id": "D3-02",
+    "category": "consumption",
+    "title": "Laptop failure",
+    "story": "Your laptop needs repair and delaying it affects productivity.",
+    "baseEffect": { "cash": -1200, "income": 0, "debt": 0 },
+    "knowledgePoint": "Some spending looks like consumption but is really preserving earning ability.",
+    "teacherNote": "Connect this with device readiness and side income."
+  },
+  {
+    "id": "D3-03",
+    "category": "consumption",
+    "title": "Lost accessory or device",
+    "story": "A small but necessary electronic item goes missing during travel.",
+    "baseEffect": { "cash": -400, "income": 0, "debt": 0 },
+    "knowledgePoint": "Replacement spending is not always vanity spending.",
+    "teacherNote": "Useful for discussing replacement versus upgrade."
+  },
+  {
+    "id": "D3-04",
+    "category": "consumption",
+    "title": "Traffic fine",
+    "story": "A traffic mistake creates an unexpected fine.",
+    "baseEffect": { "cash": -200, "income": 0, "debt": 0 },
+    "knowledgePoint": "Behavioral mistakes create friction costs that feel small but add up.",
+    "teacherNote": "If the student owns a vehicle, this becomes a richer discussion."
+  },
+  {
+    "id": "D3-05",
+    "category": "consumption",
+    "title": "Impulse purchase regret",
+    "story": "A livestream purchase feels unnecessary as soon as it arrives.",
+    "baseEffect": { "cash": -500, "income": 0, "debt": 0 },
+    "knowledgePoint": "Emotional spending is often visible only after the money leaves.",
+    "teacherNote": "Good for discussing discipline and waiting periods."
+  },
+  {
+    "id": "D3-06",
+    "category": "consumption",
+    "title": "Software renewal",
+    "story": "A tool you rely on for study or work now needs a paid renewal.",
+    "baseEffect": { "cash": -300, "income": 0, "debt": 0 },
+    "knowledgePoint": "Some subscriptions protect future earning capacity.",
+    "teacherNote": "A nice bridge between tools, productivity, and side income."
+  },
+  {
+    "id": "D4-01",
+    "category": "income",
+    "title": "Short video incentive",
+    "story": "A content experiment unexpectedly earns a small platform reward.",
+    "baseEffect": { "cash": 300, "income": 0, "debt": 0 },
+    "knowledgePoint": "Non-salary income often comes from earlier effort and experimentation.",
+    "teacherNote": "Use this to discuss human capital and uneven payoff timing."
+  },
+  {
+    "id": "D4-02",
+    "category": "income",
+    "title": "Referral side gig",
+    "story": "A classmate introduces you to a small paid editing task.",
+    "baseEffect": { "cash": 500, "income": 0, "debt": 0 },
+    "knowledgePoint": "Extra income is often limited by time and focus, not only opportunity.",
+    "teacherNote": "Compare skill-based income with speculation."
+  },
+  {
+    "id": "D4-03",
+    "category": "income",
+    "title": "Scholarship or contest bonus",
+    "story": "Past effort in learning pays back through a cash reward.",
+    "baseEffect": { "cash": 800, "income": 0, "debt": 0 },
+    "knowledgePoint": "Learning can have delayed but meaningful financial returns.",
+    "teacherNote": "Tie this back to the learning module."
+  },
+  {
+    "id": "D4-04",
+    "category": "income",
+    "title": "Tutoring opportunity",
+    "story": "A friend introduces a short tutoring job that pays modestly.",
+    "baseEffect": { "cash": 400, "income": 0, "debt": 0 },
+    "knowledgePoint": "Reliable small income can matter more than flashy risky wins.",
+    "teacherNote": "Useful for explaining income stacking."
+  },
+  {
+    "id": "D4-05",
+    "category": "income",
+    "title": "Client cancels part of a gig",
+    "story": "A side client backs out and only part of the work gets paid.",
+    "baseEffect": { "cash": 100, "income": 0, "debt": 0 },
+    "knowledgePoint": "Side income is not guaranteed and should not be treated as a certainty.",
+    "teacherNote": "Discuss volatility in self-generated income."
+  },
+  {
+    "id": "D4-06",
+    "category": "income",
+    "title": "Internship allowance",
+    "story": "A short practical role gives you a stipend and confidence boost.",
+    "baseEffect": { "cash": 600, "income": 0.03, "debt": 0 },
+    "knowledgePoint": "Career experience can improve both immediate and future earning power.",
+    "teacherNote": "Good card for discussing salary growth versus market gains."
+  },
+  {
+    "id": "D5-01",
+    "category": "social",
+    "title": "Wedding gift",
+    "story": "A friend gets married and social norms push you to spend.",
+    "baseEffect": { "cash": -500, "income": 0, "debt": 0 },
+    "knowledgePoint": "Human relationships create predictable but often under-budgeted spending.",
+    "teacherNote": "Useful for discussing budget boundaries."
+  },
+  {
+    "id": "D5-02",
+    "category": "social",
+    "title": "Class reunion",
+    "story": "A reunion ends up costing more than expected.",
+    "baseEffect": { "cash": -300, "income": 0, "debt": 0 },
+    "knowledgePoint": "Fun spending is not wrong, but it should still respect a plan.",
+    "teacherNote": "Compare students with and without debt stress."
+  },
+  {
+    "id": "D5-03",
+    "category": "social",
+    "title": "Marriage discussion begins",
+    "story": "A relationship turns serious and spending conversations start to appear.",
+    "baseEffect": { "cash": -200, "income": 0, "debt": 0 },
+    "knowledgePoint": "Life-stage planning often starts before the biggest payment arrives.",
+    "teacherNote": "Connect this with engagement, wedding, and family support modules."
+  },
+  {
+    "id": "D5-04",
+    "category": "social",
+    "title": "Anniversary spending",
+    "story": "A special date tempts you into a celebration budget.",
+    "baseEffect": { "cash": -400, "income": 0, "debt": 0 },
+    "knowledgePoint": "Emotional spending still competes with long-term goals.",
+    "teacherNote": "Good moment to discuss planned versus reactive spending."
+  },
+  {
+    "id": "D5-05",
+    "category": "social",
+    "title": "Relative asks for short-term help",
+    "story": "A close relative requests temporary financial help.",
+    "baseEffect": { "cash": -1000, "income": 0, "debt": 0 },
+    "knowledgePoint": "Lending or supporting within family networks is never risk free.",
+    "teacherNote": "Good card for talking about soft obligations and reserve planning."
+  },
+  {
+    "id": "D5-06",
+    "category": "social",
+    "title": "Premium social event",
+    "story": "A high-end networking or leisure invitation is expensive but hard to refuse.",
+    "baseEffect": { "cash": -1500, "income": 0, "debt": 0 },
+    "knowledgePoint": "Status spending does not automatically convert into financial return.",
+    "teacherNote": "Use this to separate image costs from productive investment."
+  },
+  {
+    "id": "D6-01",
+    "category": "safety",
+    "title": "Fake task scam",
+    "story": "A side-job message promises easy money but quickly asks for deposits.",
+    "baseEffect": { "cash": -500, "income": 0, "debt": 0 },
+    "knowledgePoint": "Low-barrier high-return offers are often fraud rather than opportunity.",
+    "teacherNote": "Connect with cyber protection and behavioral discipline."
+  },
+  {
+    "id": "D6-02",
+    "category": "safety",
+    "title": "Follow-trading trap",
+    "story": "A group chat shows huge returns and pushes you to copy a trade.",
+    "baseEffect": { "cash": -800, "income": 0, "debt": 0 },
+    "knowledgePoint": "Being led by someone else's screenshot is a red flag, not analysis.",
+    "teacherNote": "Good bridge to high-risk exposure and crypto narratives."
+  },
+  {
+    "id": "D6-03",
+    "category": "safety",
+    "title": "Fake refund contact",
+    "story": "A caller pretending to be platform support tries to freeze your attention and money.",
+    "baseEffect": { "cash": -1000, "income": 0, "debt": 0 },
+    "knowledgePoint": "Fraud loss prevention is a real financial skill.",
+    "teacherNote": "Use this with cyber cover and safety setup."
+  },
+  {
+    "id": "D6-04",
+    "category": "safety",
+    "title": "Card misuse alert",
+    "story": "A suspicious payment slips through before you lock the account.",
+    "baseEffect": { "cash": -600, "income": 0, "debt": 0 },
+    "knowledgePoint": "Payment security is part of financial health, not just a tech topic.",
+    "teacherNote": "Good card for cyber cover and safety setup."
+  },
+  {
+    "id": "D6-05",
+    "category": "safety",
+    "title": "Guaranteed platform pitch",
+    "story": "An ad promises capital safety and unusually high returns at the same time.",
+    "baseEffect": { "cash": -700, "income": 0, "debt": 0 },
+    "knowledgePoint": "Guaranteed high return claims deserve suspicion, not trust.",
+    "teacherNote": "Tie this to product screening and fraud awareness."
+  },
+  {
+    "id": "D6-06",
+    "category": "safety",
+    "title": "Trusted contact investment trap",
+    "story": "A familiar person recommends a so-called guaranteed project.",
+    "baseEffect": { "cash": -1000, "income": 0, "debt": 0 },
+    "knowledgePoint": "Relationship trust does not reduce investment risk.",
+    "teacherNote": "Use this to explain affinity fraud and social proof."
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "name": "finance-simulator-rebuild",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "node apps/server/src/index.js",
+    "dev:web": "npm --workspace @finance/web run dev",
+    "dev:server": "npm --workspace @finance/server run dev",
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:windows": "powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1"
+  }
+}
