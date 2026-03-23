@@ -555,6 +555,32 @@ export async function createPostgresRepository(connectionString) {
     async getScreenBundle(roomCode) {
       return queryScreenBundle(roomCode);
     },
+    async cleanupRoomStorage(roomId, keepRoundNo) {
+      await client.query("delete from room_archives where classroom_id = $1", [roomId]);
+
+      await client.query(
+        `delete from round_ledgers
+         where season_id in (
+           select id from room_seasons where classroom_id = $1 and round_no <> $2
+         )`,
+        [roomId, keepRoundNo]
+      );
+      await client.query(
+        `delete from round_random_events
+         where season_id in (
+           select id from room_seasons where classroom_id = $1 and round_no <> $2
+         )`,
+        [roomId, keepRoundNo]
+      );
+      await client.query(
+        `delete from round_decisions
+         where season_id in (
+           select id from room_seasons where classroom_id = $1 and round_no <> $2
+         )`,
+        [roomId, keepRoundNo]
+      );
+      await client.query("delete from room_seasons where classroom_id = $1 and round_no <> $2", [roomId, keepRoundNo]);
+    },
     async close() {
       await client.end();
     }

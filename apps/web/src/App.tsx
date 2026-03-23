@@ -774,6 +774,24 @@ export function App() {
     }
   }
 
+  async function handleCleanupStorage() {
+    if (!session) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const nextPayload = await apiClient.cleanupStorage<ClassroomPayload>(session.token);
+      setPayload(nextPayload);
+      setHistoryPayload(null);
+      setRoundDetailPayload(null);
+      setStudentRoundDetailPayload(null);
+      setTeacherView("dashboard");
+    } catch (caughtError) {
+      setError(getApiErrorMessage("Clean storage", caughtError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleResetRoom() {
     if (!session) return;
     setLoading(true);
@@ -1061,6 +1079,7 @@ export function App() {
           onLockRound={handleLockRound}
           onSettleRound={handleSettleRound}
           onArchive={handleArchiveRoom}
+          onCleanupStorage={handleCleanupStorage}
           onResetRoom={handleResetRoom}
           onExport={handleExportRoom}
           onOpenArchives={handleOpenArchives}

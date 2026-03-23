@@ -154,6 +154,21 @@ export function createRouter(context) {
       return;
     }
 
+    if (request.method === "POST" && request.url === "/api/teacher/cleanup-storage") {
+      const token = getBearerToken(request);
+      const payload = await store.cleanupStorage(token);
+      if (payload.error === "UNAUTHORIZED") {
+        sendJson(response, 401, payload);
+        return;
+      }
+      if (payload.error) {
+        sendJson(response, 404, payload);
+        return;
+      }
+      sendJson(response, 200, payload);
+      return;
+    }
+
     if (request.method === "POST" && request.url === "/api/teacher/reset-room") {
       const token = getBearerToken(request);
       const payload = await store.resetRoom(token);

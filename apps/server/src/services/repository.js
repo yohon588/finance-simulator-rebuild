@@ -41,6 +41,9 @@ export function createInMemoryRepository(seed = {}) {
         sessions: Array.from(sessions.values())
       };
     },
+    async cleanupRoomStorage() {
+      return undefined;
+    },
     async close() {
       return undefined;
     }
@@ -95,6 +98,10 @@ export function createFileRepository(filePath) {
     },
     serialize() {
       return repository.serialize();
+    },
+    async cleanupRoomStorage(roomId, keepRoundNo) {
+      await repository.cleanupRoomStorage(roomId, keepRoundNo);
+      persist();
     },
     async close() {
       return repository.close();

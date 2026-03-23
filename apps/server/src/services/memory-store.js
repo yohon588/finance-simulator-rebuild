@@ -1724,6 +1724,53 @@ export function createMemoryStore(moduleConfig, options = {}) {
     return buildTeacherPayload(room, session, moduleConfig);
   }
 
+  async function cleanupStorage(token) {
+    const session = await repository.getSession(token);
+    if (!session || session.role !== "teacher") {
+      return { error: "UNAUTHORIZED" };
+    }
+    const room = await repository.getRoom(session.roomId);
+    if (!room) {
+      return { error: "ROOM_NOT_FOUND" };
+    }
+
+    const originalArchiveCount = room.archives?.length ?? 0;
+    const originalHistoryCount = room.round.history?.length ?? 0;
+    const preservedRoundEntry = (room.round.history ?? []).slice(-1)[0] ?? null;
+    const preservedRoundNo = preservedRoundEntry?.roundNo ?? null;
+    let removedStudentLedgers = 0;
+
+    room.archives = [];
+    room.round.history = preservedRoundEntry ? [preservedRoundEntry] : [];
+    room.students = (room.students ?? []).map((student) => {
+      const originalCount = student.history?.length ?? 0;
+      const nextHistory = preservedRoundNo
+        ? (student.history ?? []).filter((entry) => entry.roundNo === preservedRoundNo).slice(-1)
+        : [];
+      removedStudentLedgers += Math.max(0, originalCount - nextHistory.length);
+
+      return {
+        ...student,
+        history: nextHistory,
+        latestLedger: nextHistory[0] ?? student.latestLedger ?? null
+      };
+    });
+
+    await repository.saveRoom(room);
+    if (typeof repository.cleanupRoomStorage === "function") {
+      await repository.cleanupRoomStorage(room.id, room.round.no);
+    }
+
+    return {
+      ...(buildTeacherPayload(room, session, moduleConfig)),
+      cleanupSummary: {
+        removedArchives: originalArchiveCount,
+        removedRoundHistory: Math.max(0, originalHistoryCount - room.round.history.length),
+        removedStudentLedgers
+      }
+    };
+  }
+
   async function resetRoom(token) {
     const session = await repository.getSession(token);
     if (!session || session.role !== "teacher") {
@@ -2082,6 +2129,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
     rollDice,
     submitDecision,
     archiveRoom,
+    cleanupStorage,
     resetRoom,
     exportRoom,
     getTeacherHistory,

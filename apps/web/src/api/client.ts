@@ -134,6 +134,12 @@ export const apiClient = {
       headers: { Authorization: `Bearer ${token}` }
     });
   },
+  cleanupStorage<T>(token: string) {
+    return requestJson<T>("/api/teacher/cleanup-storage", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
   resetRoom<T>(token: string) {
     return requestJson<T>("/api/teacher/reset-room", {
       method: "POST",

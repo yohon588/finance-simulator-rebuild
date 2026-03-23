@@ -7,6 +7,7 @@ type TeacherDashboardPageProps = {
   onLockRound: () => Promise<void>;
   onSettleRound: () => Promise<void>;
   onArchive: () => Promise<void>;
+  onCleanupStorage: () => Promise<void>;
   onResetRoom: () => Promise<void>;
   onExport: () => Promise<void>;
   onOpenArchives: () => Promise<void>;
@@ -197,6 +198,9 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
           </button>
           <button type="button" disabled={props.loading || !canArchiveRoom} onClick={props.onArchive}>
             Archive
+          </button>
+          <button type="button" className="ghost-button" disabled={props.loading} onClick={props.onCleanupStorage}>
+            Clean Storage
           </button>
           <button type="button" disabled={props.loading || !canResetRoom} onClick={props.onResetRoom}>
             Reset Room
