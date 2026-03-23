@@ -19,26 +19,26 @@ export function AuthPage(props: AuthPageProps) {
   return (
     <section className="auth-grid">
       <article className="panel auth-panel">
-        <p className="eyebrow">Student</p>
-        <h2>Join Classroom</h2>
+        <p className="eyebrow">学生端</p>
+        <h2>加入课堂</h2>
         <label>
-          Room Code
+          课堂码
           <input value={roomCode} onChange={(event) => setRoomCode(event.target.value.toUpperCase())} />
         </label>
         <label>
-          Display Name
+          显示名称
           <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
         </label>
         <label>
-          Role
+          角色
           <select value={roleId} onChange={(event) => setRoleId(event.target.value)}>
-            <option value="R1">R1 Basic</option>
-            <option value="R2">R2 Service</option>
-            <option value="R3">R3 Sales</option>
-            <option value="R4">R4 Tech</option>
-            <option value="R5">R5 Ops</option>
-            <option value="R6">R6 White Collar</option>
-            <option value="R7">R7 High Income</option>
+            <option value="R1">R1 基础岗</option>
+            <option value="R2">R2 服务岗</option>
+            <option value="R3">R3 销售岗</option>
+            <option value="R4">R4 技术岗</option>
+            <option value="R5">R5 运营岗</option>
+            <option value="R6">R6 白领岗</option>
+            <option value="R7">R7 高收入岗</option>
           </select>
         </label>
         <button
@@ -46,19 +46,19 @@ export function AuthPage(props: AuthPageProps) {
           disabled={props.loading}
           onClick={() => props.onJoinRoom({ roomCode, displayName, roleId })}
         >
-          {props.loading ? "Working..." : "Join"}
+          {props.loading ? "处理中..." : "加入课堂"}
         </button>
       </article>
 
       <article className="panel auth-panel">
-        <p className="eyebrow">Teacher</p>
-        <h2>Create Classroom</h2>
+        <p className="eyebrow">教师端</p>
+        <h2>创建课堂</h2>
         <label>
-          Teacher Name
+          教师姓名
           <input value={teacherName} onChange={(event) => setTeacherName(event.target.value)} />
         </label>
         <label>
-          Classroom Name
+          课堂名称
           <input value={roomName} onChange={(event) => setRoomName(event.target.value)} />
         </label>
         <button
@@ -66,7 +66,7 @@ export function AuthPage(props: AuthPageProps) {
           disabled={props.loading}
           onClick={() => props.onCreateRoom({ teacherName, roomName })}
         >
-          {props.loading ? "Working..." : "Create"}
+          {props.loading ? "处理中..." : "创建课堂"}
         </button>
         {props.error ? <p className="form-error">{props.error}</p> : null}
       </article>

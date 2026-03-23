@@ -88,117 +88,105 @@ export function TeacherRoundDetailPage(props: TeacherRoundDetailPageProps) {
     <section className="page-stack">
       <article className="panel dashboard-hero">
         <div>
-          <p className="eyebrow">Teacher Round Detail</p>
+          <p className="eyebrow">教师回合详情</p>
           <h2>
-            {props.payload?.classroom?.name ?? "Classroom"} | Round {detail?.roundNo ?? "--"}
+            {props.payload?.classroom?.name ?? "课堂"} | 第 {detail?.roundNo ?? "--"} 回合
           </h2>
-          <p>{detail?.eventTitle ?? "Macro Event"} | {detail?.settledAt ?? "--"}</p>
+          <p>{detail?.eventTitle ?? "宏观事件"} | {detail?.settledAt ?? "--"}</p>
         </div>
         <div className="action-row">
           <button type="button" className="ghost-button" onClick={props.onBack} disabled={props.loading}>
-            Back
+            返回
           </button>
         </div>
       </article>
 
       <article className="panel page-panel">
-        <h3>Round Summary</h3>
+        <h3>回合摘要</h3>
         {!detail ? (
-          <p>No round detail loaded.</p>
+          <p>当前没有加载到回合详情。</p>
         ) : (
           <>
-            <p>Average score: {detail.avgScore ?? 0}</p>
-            <p>Submitted: {detail.submitted ?? 0}</p>
+            <p>平均分：{detail.avgScore ?? 0}</p>
+            <p>提交人数：{detail.submitted ?? 0}</p>
             <p>
-              Drivers:{" "}
-              {(detail.teachingSummary?.topDrivers ?? [])
+              主要驱动：{(detail.teachingSummary?.topDrivers ?? [])
                 .map((item) => `${item.label} ${item.total}`)
                 .join(" / ") || "--"}
             </p>
             <p>
-              Dice mix:{" "}
-              {(detail.teachingSummary?.diceCategories ?? [])
+              骰子分布：{(detail.teachingSummary?.diceCategories ?? [])
                 .map((item) => `${item.category} x${item.count}`)
                 .join(" / ") || "--"}
             </p>
             <p>
-              Risk focus:{" "}
-              {(detail.teachingSummary?.topRiskTags ?? [])
+              风险焦点：{(detail.teachingSummary?.topRiskTags ?? [])
                 .map((item) => `${item.tag}(${item.count})`)
                 .join(" / ") || "--"}
             </p>
-            <p>Teacher cue: {detail.teachingSummary?.teacherCue ?? "--"}</p>
+            <p>教师提示：{detail.teachingSummary?.teacherCue ?? "--"}</p>
           </>
         )}
       </article>
 
       <article className="panel page-panel">
-        <h3>Student Snapshots</h3>
+        <h3>学生快照</h3>
         {!detail?.students || detail.students.length === 0 ? (
-          <p>No student detail available for this round.</p>
+          <p>当前回合还没有学生详情。</p>
         ) : (
           <div className="student-list">
             {detail.students.map((student) => (
               <div key={student.studentId} className="archive-card">
                 <strong>
-                  {student.displayName} | {student.roleId} | score {student.finalScore} | net worth {student.netWorth ?? 0}
+                  {student.displayName} | {student.roleId} | 分数 {student.finalScore} | 净资产 {student.netWorth ?? 0}
                 </strong>
                 <span>
-                  Dice: {student.diceEvent?.title ?? "--"} ({student.diceEvent?.category ?? "--"})
+                  骰子事件：{student.diceEvent?.title ?? "--"}（{student.diceEvent?.category ?? "--"}）
                 </span>
                 <span>
-                  Dice cash effect: {student.diceEvent?.cashEffect ?? 0} |{" "}
-                  {(student.diceEvent?.modifiers ?? []).join(" / ") || "no modifiers"}
+                  骰子现金影响：{student.diceEvent?.cashEffect ?? 0} | {(student.diceEvent?.modifiers ?? []).join(" / ") || "无修正因素"}
                 </span>
-                {student.diceEvent?.knowledgePoint ? (
-                  <span>Knowledge: {student.diceEvent.knowledgePoint}</span>
-                ) : null}
-                {student.diceEvent?.teacherNote ? <span>Teacher note: {student.diceEvent.teacherNote}</span> : null}
+                {student.diceEvent?.knowledgePoint ? <span>知识点：{student.diceEvent.knowledgePoint}</span> : null}
+                {student.diceEvent?.teacherNote ? <span>教师提示：{student.diceEvent.teacherNote}</span> : null}
                 <span>
-                  Prep: L {student.preparedness?.learningReady ? 1 : 0} / H {student.preparedness?.healthReady ? 1 : 0} / T{" "}
-                  {student.preparedness?.deviceReady ? 1 : 0} / R {student.preparedness?.reserveReady ? 1 : 0} / S{" "}
-                  {student.preparedness?.safetyReady ? 1 : 0} / D {student.preparedness?.debtStressed ? 1 : 0}
+                  准备状态：学习 {student.preparedness?.learningReady ? 1 : 0} / 健康 {student.preparedness?.healthReady ? 1 : 0} /
+                  设备 {student.preparedness?.deviceReady ? 1 : 0} / 储备 {student.preparedness?.reserveReady ? 1 : 0} / 安全{" "}
+                  {student.preparedness?.safetyReady ? 1 : 0} / 债务压力 {student.preparedness?.debtStressed ? 1 : 0}
                 </span>
                 <span>
-                  Cover: H {student.insuranceFlags?.healthCover ? 1 : 0} / A {student.insuranceFlags?.accidentCover ? 1 : 0} / C{" "}
-                  {student.insuranceFlags?.cyberCover ? 1 : 0} | family {student.family?.stage ?? "single"} / support{" "}
+                  保障：健康 {student.insuranceFlags?.healthCover ? 1 : 0} / 意外 {student.insuranceFlags?.accidentCover ? 1 : 0} /
+                  网络安全 {student.insuranceFlags?.cyberCover ? 1 : 0} | 家庭阶段 {student.family?.stage ?? "单身"} / 支持{" "}
                   {student.family?.monthlySupport ?? 0}
                 </span>
                 <span>
-                  Ratios: debt {student.score?.debtRatio ?? 0} / dsr {student.score?.dsr ?? 0} / emergency{" "}
-                  {student.score?.emergencyMonths ?? 0} / fixed cost {student.score?.fixedCostRatio ?? 0}
+                  指标：负债率 {student.score?.debtRatio ?? 0} / 偿债率 {student.score?.dsr ?? 0} / 应急金{" "}
+                  {student.score?.emergencyMonths ?? 0} / 固定成本占比 {student.score?.fixedCostRatio ?? 0}
                 </span>
                 <span>
-                  Drivers:{" "}
-                  {(student.topDrivers ?? [])
-                    .map((item) => `${item.label} ${item.value}`)
-                    .join(" / ") || "--"}
+                  主要驱动：{(student.topDrivers ?? []).map((item) => `${item.label} ${item.value}`).join(" / ") || "--"}
                 </span>
                 <span>
-                  Debt: {student.debtChange?.debtBefore ?? 0} to {student.debtChange?.debtAfter ?? 0} | shortfall{" "}
-                  {student.debtChange?.bridgeShortfall ?? 0} via {student.debtChange?.bridgeTarget ?? "--"}
+                  债务：{student.debtChange?.debtBefore ?? 0} 到 {student.debtChange?.debtAfter ?? 0} | 缺口债{" "}
+                  {student.debtChange?.bridgeShortfall ?? 0} 进入 {student.debtChange?.bridgeTarget ?? "--"}
                 </span>
                 <span>
-                  Debt states:{" "}
-                  {(student.debtChange?.items ?? [])
+                  债务状态：{(student.debtChange?.items ?? [])
                     .map((item) => `${item.type ?? item.id}:${item.status}/${item.principal}`)
                     .join(" / ") || "--"}
                 </span>
                 <span>
-                  Debt allocation:{" "}
-                  {Object.entries(student.debtChange?.paidByDebt ?? {})
+                  债务分配：{Object.entries(student.debtChange?.paidByDebt ?? {})
                     .map(([debtId, paid]) => `${debtId}:${paid}`)
                     .join(" / ") || "--"}
                 </span>
                 <span>
-                  Cash flow:{" "}
-                  {Object.entries(student.cashFlow ?? {})
+                  现金流：{Object.entries(student.cashFlow ?? {})
                     .slice(0, 6)
                     .map(([key, value]) => `${key}:${value}`)
                     .join(" / ") || "--"}
                 </span>
-                <span>Risk tags: {student.riskTags.join(" / ") || "--"}</span>
-                <span>{student.settlementSummary?.[0] ?? "No summary."}</span>
+                <span>风险标签：{student.riskTags.join(" / ") || "--"}</span>
+                <span>{student.settlementSummary?.[0] ?? "暂无结算摘要。"}</span>
               </div>
             ))}
           </div>

@@ -101,76 +101,75 @@ export function ScreenPage(props: ScreenPageProps) {
     <section className="page-stack">
       <article className="panel dashboard-hero screen-hero">
         <div>
-          <p className="eyebrow">Classroom Screen</p>
-          <h2>{props.payload?.classroom.name ?? "Live Ranking"}</h2>
+          <p className="eyebrow">课堂大屏</p>
+          <h2>{props.payload?.classroom.name ?? "实时排行榜"}</h2>
           <p>
-            {props.payload?.classroom.code ?? "--"} | Round {props.payload?.round.no ?? "--"} /{" "}
-            {props.payload?.round.total ?? "--"} | {props.payload?.round.status ?? "--"}
+            {props.payload?.classroom.code ?? "--"} | 第 {props.payload?.round.no ?? "--"} 回合 / 共{" "}
+            {props.payload?.round.total ?? "--"} 回合 / {props.payload?.round.status ?? "--"}
           </p>
         </div>
         <div className="action-row">
           <button type="button" onClick={props.onRefresh} disabled={props.loading}>
-            Refresh
+            刷新
           </button>
           <button type="button" className="ghost-button" onClick={props.onBack}>
-            Back
+            返回
           </button>
         </div>
       </article>
 
       <section className="metric-grid">
         <article className="panel metric-card">
-          <span>Students</span>
+          <span>学生人数</span>
           <strong>{profile?.count ?? 0}</strong>
         </article>
         <article className="panel metric-card">
-          <span>Avg Score</span>
+          <span>平均分</span>
           <strong>{profile?.avgScore ?? 0}</strong>
         </article>
         <article className="panel metric-card">
-          <span>Avg Net Worth</span>
+          <span>平均净资产</span>
           <strong>{profile?.avgNetWorth ?? 0}</strong>
         </article>
         <article className="panel metric-card">
-          <span>Avg Emergency Months</span>
+          <span>平均应急金月数</span>
           <strong>{profile?.avgEmergencyMonths ?? 0}</strong>
         </article>
         <article className="panel metric-card">
-          <span>Avg DSR</span>
+          <span>平均偿债率</span>
           <strong>{profile?.avgDsr ?? 0}</strong>
         </article>
       </section>
 
       <article className="panel page-panel">
-        <h3>Current Event</h3>
-        <p>{props.payload?.currentEvent?.title ?? "Teacher has not opened a round yet."}</p>
+        <h3>当前事件</h3>
+        <p>{props.payload?.currentEvent?.title ?? "教师还没有开放回合。"}</p>
         <p>
-          Coverage health {profile?.insuranceCoverage?.healthCover ?? 0} / accident{" "}
-          {profile?.insuranceCoverage?.accidentCover ?? 0} / cyber{" "}
-          {profile?.insuranceCoverage?.cyberCover ?? 0}
+          保障覆盖：健康 {profile?.insuranceCoverage?.healthCover ?? 0} / 意外{" "}
+          {profile?.insuranceCoverage?.accidentCover ?? 0} / 网络安全 {profile?.insuranceCoverage?.cyberCover ?? 0}
         </p>
         <p>
-          Preparedness L {profile?.preparedness?.learningReady ?? 0} / H {profile?.preparedness?.healthReady ?? 0} / T{" "}
-          {profile?.preparedness?.deviceReady ?? 0} / R {profile?.preparedness?.reserveReady ?? 0} / S{" "}
+          准备状态：学习 {profile?.preparedness?.learningReady ?? 0} / 健康 {profile?.preparedness?.healthReady ?? 0} /
+          设备 {profile?.preparedness?.deviceReady ?? 0} / 储备 {profile?.preparedness?.reserveReady ?? 0} / 安全{" "}
           {profile?.preparedness?.safetyReady ?? 0}
-          {showTax ? ` / X ${profile?.preparedness?.taxReady ?? 0}` : ""}
-          {showRetirement ? ` / Q ${profile?.preparedness?.retirementReady ?? 0}` : ""}
-          {showLegacy ? ` / L ${profile?.preparedness?.legacyReady ?? 0}` : ""}
+          {showTax ? ` / 税务 ${profile?.preparedness?.taxReady ?? 0}` : ""}
+          {showRetirement ? ` / 退休 ${profile?.preparedness?.retirementReady ?? 0}` : ""}
+          {showLegacy ? ` / 家庭支持 ${profile?.preparedness?.legacyReady ?? 0}` : ""}
         </p>
-        <p>Vehicles owned: {profile?.vehiclesOwned ?? 0}</p>
-        {showRealEstate ? <p>Homes owned: {profile?.homesOwned ?? 0}</p> : null}
+        <p>已购车人数：{profile?.vehiclesOwned ?? 0}</p>
+        {showRealEstate ? <p>已购房人数：{profile?.homesOwned ?? 0}</p> : null}
         {showRealEstate ? (
           <p>
-            Family stages engaged {profile?.engagedStudents ?? 0} / married {profile?.marriedStudents ?? 0}
+            家庭阶段：订婚 {profile?.engagedStudents ?? 0} / 已婚 {profile?.marriedStudents ?? 0}
           </p>
         ) : null}
-        {showRealEstate ? <p>Fixed cost lock: {profile?.fixedCostLocked ?? 0}</p> : null}
+        {showRealEstate ? <p>固定成本锁定：{profile?.fixedCostLocked ?? 0}</p> : null}
       </article>
 
       <article className="panel page-panel">
-        <h3>Leaderboard</h3>
+        <h3>排行榜</h3>
         {ranking.length === 0 ? (
-          <p>No ranked students yet.</p>
+          <p>当前还没有排行榜数据。</p>
         ) : (
           <div className="student-list">
             {ranking.map((row) => (
@@ -179,7 +178,7 @@ export function ScreenPage(props: ScreenPageProps) {
                   #{row.rank} {row.displayName}
                 </strong>
                 <span>
-                  {row.roleId} | score {row.finalScore} | net worth {row.netWorth}
+                  {row.roleId} | 分数 {row.finalScore} | 净资产 {row.netWorth}
                 </span>
               </div>
             ))}
@@ -188,62 +187,59 @@ export function ScreenPage(props: ScreenPageProps) {
       </article>
 
       <article className="panel page-panel">
-        <h3>Round Teaching Summary</h3>
+        <h3>回合教学总结</h3>
         {!roundSummary ? (
-          <p>No settled round summary yet.</p>
+          <p>当前还没有已结算回合总结。</p>
         ) : (
           <div className="student-list">
             <div className="student-row">
-              <strong>Top Drivers</strong>
+              <strong>主要驱动</strong>
               <span>
-                {(roundSummary.topDrivers ?? [])
-                  .map((item) => `${item.label} ${item.total}`)
-                  .join(" / ") || "--"}
+                {(roundSummary.topDrivers ?? []).map((item) => `${item.label} ${item.total}`).join(" / ") || "--"}
               </span>
             </div>
             <div className="student-row">
-              <strong>Dice Mix</strong>
+              <strong>骰子分布</strong>
               <span>
-                {(roundSummary.diceCategories ?? [])
-                  .map((item) => `${item.category} x${item.count}`)
-                  .join(" / ") || "--"}
+                {(roundSummary.diceCategories ?? []).map((item) => `${item.category} x${item.count}`).join(" / ") ||
+                  "--"}
               </span>
             </div>
             <div className="student-row">
-              <strong>Protection And Stress</strong>
+              <strong>保护与压力</strong>
               <span>
-                protected {roundSummary.protectionSummary?.protectedStudents ?? 0} | debt stress{" "}
-                {roundSummary.protectionSummary?.stressedStudents ?? 0} | high risk{" "}
+                保护命中 {roundSummary.protectionSummary?.protectedStudents ?? 0} | 债务压力{" "}
+                {roundSummary.protectionSummary?.stressedStudents ?? 0} | 高风险{" "}
                 {roundSummary.protectionSummary?.highRiskStudents ?? 0}
               </span>
             </div>
             <div className="student-row">
-              <strong>Modifier Impact</strong>
+              <strong>修正影响</strong>
               <span>
-                supportive {roundSummary.protectionSummary?.supportiveHits ?? 0} | amplified{" "}
+                保护型 {roundSummary.protectionSummary?.supportiveHits ?? 0} | 放大型{" "}
                 {roundSummary.protectionSummary?.amplifiedHits ?? 0}
               </span>
             </div>
             {showRealEstate ? (
               <>
                 <div className="student-row">
-                  <strong>Lifecycle Load</strong>
+                  <strong>生命周期负担</strong>
                   <span>
-                    vehicles {roundSummary.lifecycleLoadSummary?.vehiclesOwned ?? 0} | homes{" "}
-                    {roundSummary.lifecycleLoadSummary?.homesOwned ?? 0} | engaged{" "}
-                    {roundSummary.lifecycleLoadSummary?.engagedStudents ?? 0} | married{" "}
-                    {roundSummary.lifecycleLoadSummary?.marriedStudents ?? 0} | fixed lock{" "}
+                    车辆 {roundSummary.lifecycleLoadSummary?.vehiclesOwned ?? 0} | 房产{" "}
+                    {roundSummary.lifecycleLoadSummary?.homesOwned ?? 0} | 订婚{" "}
+                    {roundSummary.lifecycleLoadSummary?.engagedStudents ?? 0} | 已婚{" "}
+                    {roundSummary.lifecycleLoadSummary?.marriedStudents ?? 0} | 固定成本锁定{" "}
                     {roundSummary.lifecycleLoadSummary?.fixedCostLocked ?? 0}
                   </span>
                 </div>
                 <div className="student-row">
-                  <strong>Lifecycle Cue</strong>
+                  <strong>生命周期提示</strong>
                   <span>{roundSummary.lifecycleCue ?? "--"}</span>
                 </div>
               </>
             ) : null}
             <div className="student-row">
-              <strong>Modifier Themes</strong>
+              <strong>修正主题</strong>
               <span>
                 {(roundSummary.modifierThemes ?? [])
                   .map((item) => `${item.theme}(${item.count})`)
@@ -251,7 +247,7 @@ export function ScreenPage(props: ScreenPageProps) {
               </span>
             </div>
             <div className="student-row">
-              <strong>Teacher Cue</strong>
+              <strong>教师提示</strong>
               <span>{roundSummary.teacherCue ?? "--"}</span>
             </div>
           </div>

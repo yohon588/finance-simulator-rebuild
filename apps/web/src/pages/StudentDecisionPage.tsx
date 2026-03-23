@@ -59,9 +59,7 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
   useEffect(() => {
     try {
       const raw = window.sessionStorage.getItem(storageKey);
-      if (!raw) {
-        return;
-      }
+      if (!raw) return;
       const draft = JSON.parse(raw) as Record<string, unknown>;
       setSubmissionKey(String(draft.submissionKey ?? `${props.currentRoundId}-draft`));
       setTravel(Boolean(draft.travel));
@@ -97,12 +95,10 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
       window.sessionStorage.removeItem(storageKey);
     }
     setDraftReady(true);
-  }, [storageKey]);
+  }, [storageKey, props.currentRoundId]);
 
   useEffect(() => {
-    if (!draftReady) {
-      return;
-    }
+    if (!draftReady) return;
     window.sessionStorage.setItem(
       storageKey,
       JSON.stringify({
@@ -179,95 +175,34 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
     let gamble = null;
     let option = null;
 
-    if (travel) {
-      consume.push({ id: "C1", amount: 2000 });
-    }
+    if (travel) consume.push({ id: "C1", amount: 2000 });
+    if (course) consume.push({ id: "C3", amount: 3000 });
+    if (healthCover) consume.push({ id: "I1", amount: 500 });
+    if (accidentCover) consume.push({ id: "P1", amount: 200 });
+    if (cyberCover) consume.push({ id: "P2", amount: 150 });
+    if (toolMaintenance) consume.push({ id: "T1", amount: 400 });
+    if (reserveTopUp) consume.push({ id: "R1", amount: 800 });
+    if (safetySetup) consume.push({ id: "S1", amount: 300 });
+    if (showTax && taxReserve) consume.push({ id: "X1", amount: 400 });
+    if (showRetirement && retirementPlan) consume.push({ id: "Q1", amount: 700 });
+    if (showLegacy && legacyReserve) consume.push({ id: "L1", amount: 500 });
+    if (buyVehicle) consume.push({ id: "C5", amount: 24000 });
+    if (showRealEstate && buyHouse) consume.push({ id: "H1", amount: 60000 });
+    if (engagementPrep) consume.push({ id: "M1", amount: 6000 });
+    if (weddingPlan) consume.push({ id: "W1", amount: 18000 });
 
-    if (course) {
-      consume.push({ id: "C3", amount: 3000 });
-    }
-
-    if (healthCover) {
-      consume.push({ id: "I1", amount: 500 });
-    }
-
-    if (accidentCover) {
-      consume.push({ id: "P1", amount: 200 });
-    }
-
-    if (cyberCover) {
-      consume.push({ id: "P2", amount: 150 });
-    }
-
-    if (toolMaintenance) {
-      consume.push({ id: "T1", amount: 400 });
-    }
-
-    if (reserveTopUp) {
-      consume.push({ id: "R1", amount: 800 });
-    }
-
-    if (safetySetup) {
-      consume.push({ id: "S1", amount: 300 });
-    }
-
-    if (showTax && taxReserve) {
-      consume.push({ id: "X1", amount: 400 });
-    }
-
-    if (showRetirement && retirementPlan) {
-      consume.push({ id: "Q1", amount: 700 });
-    }
-
-    if (showLegacy && legacyReserve) {
-      consume.push({ id: "L1", amount: 500 });
-    }
-
-    if (buyVehicle) {
-      consume.push({ id: "C5", amount: 24000 });
-    }
-
-    if (showRealEstate && buyHouse) {
-      consume.push({ id: "H1", amount: 60000 });
-    }
-
-    if (engagementPrep) {
-      consume.push({ id: "M1", amount: 6000 });
-    }
-
-    if (weddingPlan) {
-      consume.push({ id: "W1", amount: 18000 });
-    }
-
-    if (Number(bondBuy) > 0) {
-      invest.push({ asset: "A4", action: "buy" as const, amount: Number(bondBuy) });
-    }
-
-    if (Number(fundBuy) > 0) {
-      invest.push({ asset: "A5", action: "buy" as const, amount: Number(fundBuy) });
-    }
-
-    if (Number(stockBuy) > 0) {
-      invest.push({ asset: "A6", action: "buy" as const, amount: Number(stockBuy) });
-    }
-
-    if (Number(cryptoBuy) > 0) {
-      invest.push({ asset: "A7", action: "buy" as const, amount: Number(cryptoBuy) });
-    }
+    if (Number(bondBuy) > 0) invest.push({ asset: "A4", action: "buy" as const, amount: Number(bondBuy) });
+    if (Number(fundBuy) > 0) invest.push({ asset: "A5", action: "buy" as const, amount: Number(fundBuy) });
+    if (Number(stockBuy) > 0) invest.push({ asset: "A6", action: "buy" as const, amount: Number(stockBuy) });
+    if (Number(cryptoBuy) > 0) invest.push({ asset: "A7", action: "buy" as const, amount: Number(cryptoBuy) });
 
     if (Number(optionBuy) > 0) {
       invest.push({ asset: "A8", action: "buy" as const, amount: Number(optionBuy) });
-      option = {
-        direction: optionDir,
-        amount: Number(optionBuy)
-      };
+      option = { direction: optionDir, amount: Number(optionBuy) };
     }
 
     if (Number(gambleAmount) > 0) {
-      gamble = {
-        type: gambleType,
-        amount: Number(gambleAmount)
-      };
+      gamble = { type: gambleType, amount: Number(gambleAmount) };
     }
 
     await props.onSubmitDecision({
@@ -287,246 +222,210 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
         ...(riskGamble ? ["A9"] : [])
       ]
     });
+
     window.sessionStorage.removeItem(storageKey);
     setSubmissionKey(`${props.currentRoundId}-submitted`);
   }
+
+  const blockedByRiskAck =
+    (Number(cryptoBuy) > 0 && !riskCrypto) ||
+    (Number(optionBuy) > 0 && !riskOption) ||
+    (Number(gambleAmount) > 0 && !riskGamble);
 
   return (
     <section className="page-stack">
       <article className="panel dashboard-hero">
         <div>
-          <p className="eyebrow">Student Decision</p>
-          <h2>Round Decision Pack</h2>
-          <p>Minimal form for the first interactive classroom loop.</p>
+          <p className="eyebrow">学生决策</p>
+          <h2>本回合决策包</h2>
+          <p>在这里填写本回合的消费、保障、借贷、投资和高风险操作。</p>
         </div>
         <div className="action-row">
           <button type="button" className="ghost-button" onClick={props.onBack}>
-            Back
+            返回
           </button>
         </div>
       </article>
 
       <article className="panel auth-panel">
         <p>
-          Preparation options: learning boosts future opportunities, health and accident cover soften medical shocks,
-          cyber protection reduces fraud losses, tool maintenance softens equipment shocks, reserve top-up softens cash
-          shocks, safety setup reduces fraud and security losses, tax reserve reduces admin friction on income gains,
-          retirement planning reinforces long-term discipline, family support reserve softens care and obligation shocks,
-          buying a vehicle increases future fixed cash outflows,
-          buying a home locks in longer-term housing cashflow, and family lifecycle choices can create future recurring
-          support costs.
+          准备项会影响后续个人事件后果：学习会提升机会收益，健康险和意外险会减轻医疗冲击，网络安全会减少诈骗损失，
+          设备维护会减轻设备故障冲击，应急储备能缓冲现金流压力，税务和退休准备会强化长期规划，家庭支持储备会缓和照护与人情支出，
+          而买车、买房和婚姻决策会带来长期固定成本。
         </p>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={travel} onChange={(event) => setTravel(event.target.checked)} />
-          Add travel expense (C1 / 2000)
+          增加旅游消费（C1 / 2000）
         </label>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={course} onChange={(event) => setCourse(event.target.checked)} />
-          Add learning course (C3 / 3000)
+          增加学习课程（C3 / 3000）
         </label>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={healthCover} onChange={(event) => setHealthCover(event.target.checked)} />
-          Add health cover (I1 / 500)
+          增加健康保障（I1 / 500）
         </label>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={accidentCover} onChange={(event) => setAccidentCover(event.target.checked)} />
-          Add accident cover (P1 / 200)
+          增加意外保障（P1 / 200）
         </label>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={cyberCover} onChange={(event) => setCyberCover(event.target.checked)} />
-          Add cyber protection (P2 / 150)
+          增加网络安全保障（P2 / 150）
         </label>
 
         <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={toolMaintenance}
-            onChange={(event) => setToolMaintenance(event.target.checked)}
-          />
-          Add tool maintenance (T1 / 400)
+          <input type="checkbox" checked={toolMaintenance} onChange={(event) => setToolMaintenance(event.target.checked)} />
+          增加工具维护（T1 / 400）
         </label>
 
         <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={reserveTopUp}
-            onChange={(event) => setReserveTopUp(event.target.checked)}
-          />
-          Add reserve top-up (R1 / 800)
+          <input type="checkbox" checked={reserveTopUp} onChange={(event) => setReserveTopUp(event.target.checked)} />
+          增加应急储备（R1 / 800）
         </label>
 
         <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={safetySetup}
-            onChange={(event) => setSafetySetup(event.target.checked)}
-          />
-          Add safety setup (S1 / 300)
+          <input type="checkbox" checked={safetySetup} onChange={(event) => setSafetySetup(event.target.checked)} />
+          增加安全设置（S1 / 300）
         </label>
 
         {showTax ? (
           <label className="checkbox-row">
             <input type="checkbox" checked={taxReserve} onChange={(event) => setTaxReserve(event.target.checked)} />
-            Add tax reserve (X1 / 400)
+            增加税务预留（X1 / 400）
           </label>
         ) : null}
 
         {showRetirement ? (
           <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={retirementPlan}
-              onChange={(event) => setRetirementPlan(event.target.checked)}
-            />
-            Add retirement contribution plan (Q1 / 700)
+            <input type="checkbox" checked={retirementPlan} onChange={(event) => setRetirementPlan(event.target.checked)} />
+            增加退休计划（Q1 / 700）
           </label>
         ) : null}
 
         {showLegacy ? (
           <label className="checkbox-row">
             <input type="checkbox" checked={legacyReserve} onChange={(event) => setLegacyReserve(event.target.checked)} />
-            Add family support reserve (L1 / 500)
+            增加家庭支持储备（L1 / 500）
           </label>
         ) : null}
 
         <label className="checkbox-row">
           <input type="checkbox" checked={buyVehicle} onChange={(event) => setBuyVehicle(event.target.checked)} />
-          Buy vehicle (C5 / down payment 24000, then 2800 carrying cost each round)
+          买车（C5 / 首付 24000，之后每轮固定支出 2800）
         </label>
 
         {showRealEstate ? (
           <label className="checkbox-row">
             <input type="checkbox" checked={buyHouse} onChange={(event) => setBuyHouse(event.target.checked)} />
-            Buy house (H1 / down payment 60000, then 2200 carrying cost each round)
+            买房（H1 / 首付 60000，之后每轮固定支出 2200）
           </label>
         ) : null}
 
         <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={engagementPrep}
-            onChange={(event) => setEngagementPrep(event.target.checked)}
-          />
-          Engagement prep (M1 / 6000 one-time, moves family stage to engaged)
+          <input type="checkbox" checked={engagementPrep} onChange={(event) => setEngagementPrep(event.target.checked)} />
+          订婚准备（M1 / 一次性 6000，并进入订婚阶段）
         </label>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={weddingPlan} onChange={(event) => setWeddingPlan(event.target.checked)} />
-          Wedding plan (W1 / 18000 one-time, then 900 family support each round)
+          婚礼计划（W1 / 一次性 18000，之后每轮家庭支出 900）
         </label>
 
         <label>
-          Borrow amount
+          借款金额
           <input type="number" min="0" value={borrow} onChange={(event) => setBorrow(event.target.value)} />
         </label>
 
         <label>
-          Borrow target
+          借款目标
           <select value={debtTarget} onChange={(event) => setDebtTarget(event.target.value)}>
-            <option value="D-consumer">Consumer Credit</option>
-            <option value="D-device">Device Installment</option>
-            <option value="D-medical">Medical Relief</option>
-            <option value="D-social">Family Social Advance</option>
-            <option value="D-bridge">Emergency Bridge</option>
-            <option value="AUTO">Auto Repay Order</option>
+            <option value="D-consumer">消费贷</option>
+            <option value="D-device">设备分期</option>
+            <option value="D-medical">医疗纾困</option>
+            <option value="D-social">家庭人情周转</option>
+            <option value="D-bridge">应急过桥债</option>
+            <option value="AUTO">自动还款顺序</option>
           </select>
         </label>
 
         <label>
-          Repay amount
+          还款金额
           <input type="number" min="0" value={repay} onChange={(event) => setRepay(event.target.value)} />
         </label>
 
         <label>
-          Buy bond fund (A4)
+          买入债券基金（A4）
           <input type="number" min="0" value={bondBuy} onChange={(event) => setBondBuy(event.target.value)} />
         </label>
 
         <label>
-          Buy stock fund (A5)
+          买入股票基金（A5）
           <input type="number" min="0" value={fundBuy} onChange={(event) => setFundBuy(event.target.value)} />
         </label>
 
         <label>
-          Buy stock (A6)
+          买入股票（A6）
           <input type="number" min="0" value={stockBuy} onChange={(event) => setStockBuy(event.target.value)} />
         </label>
 
         <label>
-          Buy crypto (A7)
+          买入虚拟币（A7）
           <input type="number" min="0" value={cryptoBuy} onChange={(event) => setCryptoBuy(event.target.value)} />
         </label>
 
         <label>
-          Buy option (A8)
+          买入期权（A8）
           <input type="number" min="0" value={optionBuy} onChange={(event) => setOptionBuy(event.target.value)} />
         </label>
 
         <label>
-          Option direction
+          期权方向
           <select value={optionDir} onChange={(event) => setOptionDir(event.target.value as "CALL" | "PUT")}>
-            <option value="CALL">CALL</option>
-            <option value="PUT">PUT</option>
+            <option value="CALL">看涨 CALL</option>
+            <option value="PUT">看跌 PUT</option>
           </select>
         </label>
 
         <label>
-          Gamble type
+          赌博/诈骗类型
           <select value={gambleType} onChange={(event) => setGambleType(event.target.value)}>
-            <option value="LOTTERY">Lottery</option>
-            <option value="SPORTS">Sports</option>
-            <option value="CASINO">Casino</option>
-            <option value="SCAM">Scam</option>
+            <option value="LOTTERY">彩票</option>
+            <option value="SPORTS">体育投注</option>
+            <option value="CASINO">赌场</option>
+            <option value="SCAM">诈骗盘</option>
           </select>
         </label>
 
         <label>
-          Gamble amount
-          <input
-            type="number"
-            min="0"
-            value={gambleAmount}
-            onChange={(event) => setGambleAmount(event.target.value)}
-          />
+          赌博/诈骗金额
+          <input type="number" min="0" value={gambleAmount} onChange={(event) => setGambleAmount(event.target.value)} />
         </label>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={riskCrypto} onChange={(event) => setRiskCrypto(event.target.checked)} />
-          Confirm high-risk exposure for crypto
+          确认虚拟币属于高风险暴露
         </label>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={riskOption} onChange={(event) => setRiskOption(event.target.checked)} />
-          Confirm high-risk exposure for options
+          确认期权属于高风险暴露
         </label>
 
         <label className="checkbox-row">
           <input type="checkbox" checked={riskGamble} onChange={(event) => setRiskGamble(event.target.checked)} />
-          Confirm gambling and fraud risk
+          确认赌博和诈骗风险
         </label>
 
-        {((Number(cryptoBuy) > 0 && !riskCrypto) ||
-          (Number(optionBuy) > 0 && !riskOption) ||
-          (Number(gambleAmount) > 0 && !riskGamble)) ? (
-          <p className="form-error">High-risk assets and gambling require their confirmation checkbox.</p>
-        ) : null}
+        {blockedByRiskAck ? <p className="form-error">高风险资产和赌博/诈骗操作必须先勾选风险确认。</p> : null}
 
-        <button
-          type="button"
-          disabled={
-            props.loading ||
-            (Number(cryptoBuy) > 0 && !riskCrypto) ||
-            (Number(optionBuy) > 0 && !riskOption) ||
-            (Number(gambleAmount) > 0 && !riskGamble)
-          }
-          onClick={handleSubmit}
-        >
-          {props.loading ? "Submitting..." : "Submit Decision"}
+        <button type="button" disabled={props.loading || blockedByRiskAck} onClick={handleSubmit}>
+          {props.loading ? "提交中..." : "提交决策"}
         </button>
       </article>
     </section>

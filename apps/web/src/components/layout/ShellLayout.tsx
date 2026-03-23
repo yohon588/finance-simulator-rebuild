@@ -9,7 +9,7 @@ export function ShellLayout(props: ShellLayoutProps) {
   return (
     <main className="shell">
       <header className="hero panel">
-        <p className="eyebrow">Finance Simulator Rebuild</p>
+        <p className="eyebrow">个人理财教学模拟器</p>
         <h1>{props.title}</h1>
         <p>{props.subtitle}</p>
       </header>

@@ -85,92 +85,88 @@ export function TeacherPrintPage(props: TeacherPrintPageProps) {
     <section className="page-stack">
       <article className="panel dashboard-hero">
         <div>
-          <p className="eyebrow">Teacher Print View</p>
-          <h2>{props.payload?.classroom.name ?? "Classroom Report"}</h2>
-          <p>{props.payload?.classroom.code ?? "--"} | Print-friendly summary</p>
+          <p className="eyebrow">教师打印视图</p>
+          <h2>{props.payload?.classroom.name ?? "课堂报告"}</h2>
+          <p>{props.payload?.classroom.code ?? "--"} | 适合打印的课堂摘要</p>
         </div>
         <div className="action-row">
           <button type="button" className="ghost-button" onClick={props.onBack}>
-            Back
+            返回
           </button>
         </div>
       </article>
 
       <article className="panel page-panel">
-        <h3>Class Profile</h3>
-        <p>Average score: {classProfile?.avgScore ?? 0}</p>
-        <p>Average net worth: {classProfile?.avgNetWorth ?? 0}</p>
-        <p>Average emergency months: {classProfile?.avgEmergencyMonths ?? 0}</p>
-        <p>Average DSR: {classProfile?.avgDsr ?? 0}</p>
+        <h3>班级画像</h3>
+        <p>平均分：{classProfile?.avgScore ?? 0}</p>
+        <p>平均净资产：{classProfile?.avgNetWorth ?? 0}</p>
+        <p>平均应急金月数：{classProfile?.avgEmergencyMonths ?? 0}</p>
+        <p>平均偿债率：{classProfile?.avgDsr ?? 0}</p>
         <p>
-          Preparedness L {classProfile?.preparedness?.learningReady ?? 0} / H{" "}
-          {classProfile?.preparedness?.healthReady ?? 0} / T {classProfile?.preparedness?.deviceReady ?? 0} / R{" "}
-          {classProfile?.preparedness?.reserveReady ?? 0} / S {classProfile?.preparedness?.safetyReady ?? 0}
-          {showTax ? ` / X ${classProfile?.preparedness?.taxReady ?? 0}` : ""}
-          {showRetirement ? ` / Q ${classProfile?.preparedness?.retirementReady ?? 0}` : ""}
-          {showLegacy ? ` / L ${classProfile?.preparedness?.legacyReady ?? 0}` : ""} / D{" "}
+          准备状态：学习 {classProfile?.preparedness?.learningReady ?? 0} / 健康{" "}
+          {classProfile?.preparedness?.healthReady ?? 0} / 设备 {classProfile?.preparedness?.deviceReady ?? 0} / 储备{" "}
+          {classProfile?.preparedness?.reserveReady ?? 0} / 安全 {classProfile?.preparedness?.safetyReady ?? 0}
+          {showTax ? ` / 税务 ${classProfile?.preparedness?.taxReady ?? 0}` : ""}
+          {showRetirement ? ` / 退休 ${classProfile?.preparedness?.retirementReady ?? 0}` : ""}
+          {showLegacy ? ` / 家庭支持 ${classProfile?.preparedness?.legacyReady ?? 0}` : ""} / 债务压力{" "}
           {classProfile?.preparedness?.debtStressed ?? 0}
         </p>
         <p>
-          Coverage health {classProfile?.insuranceCoverage?.healthCover ?? 0} / accident{" "}
-          {classProfile?.insuranceCoverage?.accidentCover ?? 0} / cyber{" "}
-          {classProfile?.insuranceCoverage?.cyberCover ?? 0}
+          保障覆盖：健康 {classProfile?.insuranceCoverage?.healthCover ?? 0} / 意外{" "}
+          {classProfile?.insuranceCoverage?.accidentCover ?? 0} / 网络安全 {classProfile?.insuranceCoverage?.cyberCover ?? 0}
         </p>
-        <p>Vehicles owned: {classProfile?.vehiclesOwned ?? 0}</p>
-        {showRealEstate ? <p>Homes owned: {classProfile?.homesOwned ?? 0}</p> : null}
+        <p>已购车人数：{classProfile?.vehiclesOwned ?? 0}</p>
+        {showRealEstate ? <p>已购房人数：{classProfile?.homesOwned ?? 0}</p> : null}
         {showRealEstate ? (
           <p>
-            Family stages engaged {classProfile?.engagedStudents ?? 0} / married {classProfile?.marriedStudents ?? 0}
+            家庭阶段：订婚 {classProfile?.engagedStudents ?? 0} / 已婚 {classProfile?.marriedStudents ?? 0}
           </p>
         ) : null}
-        {showRealEstate ? <p>Fixed cost lock: {classProfile?.fixedCostLocked ?? 0}</p> : null}
+        {showRealEstate ? <p>固定成本锁定：{classProfile?.fixedCostLocked ?? 0}</p> : null}
         <p>
-          Risk focus:{" "}
-          {(classProfile?.topRiskTags ?? []).map((item) => `${item.tag}(${item.hits})`).join(" / ") || "--"}
+          风险焦点：{(classProfile?.topRiskTags ?? []).map((item) => `${item.tag}(${item.hits})`).join(" / ") || "--"}
         </p>
       </article>
 
       <article className="panel page-panel">
-        <h3>Current Round Teaching Summary</h3>
+        <h3>当前回合教学总结</h3>
         {!roundSummary ? (
-          <p>No settled round summary yet.</p>
+          <p>当前还没有已结算回合总结。</p>
         ) : (
           <>
             <p>
-              Drivers:{" "}
-              {(roundSummary.topDrivers ?? []).map((item) => `${item.label} ${item.total}`).join(" / ") || "--"}
+              主要驱动：{(roundSummary.topDrivers ?? []).map((item) => `${item.label} ${item.total}`).join(" / ") || "--"}
             </p>
             <p>
-              Risk focus:{" "}
-              {(roundSummary.topRiskTags ?? []).map((item) => `${item.tag}(${item.count})`).join(" / ") || "--"}
+              风险焦点：{(roundSummary.topRiskTags ?? []).map((item) => `${item.tag}(${item.count})`).join(" / ") || "--"}
             </p>
             <p>
-              Protection {roundSummary.protectionSummary?.protectedStudents ?? 0} | stress{" "}
-              {roundSummary.protectionSummary?.stressedStudents ?? 0} | supportive hits{" "}
-              {roundSummary.protectionSummary?.supportiveHits ?? 0} | amplified hits{" "}
+              保护命中 {roundSummary.protectionSummary?.protectedStudents ?? 0} | 压力{" "}
+              {roundSummary.protectionSummary?.stressedStudents ?? 0} | 保护型修正{" "}
+              {roundSummary.protectionSummary?.supportiveHits ?? 0} | 放大型修正{" "}
               {roundSummary.protectionSummary?.amplifiedHits ?? 0}
             </p>
             {showRealEstate ? (
               <>
                 <p>
-                  Lifecycle load vehicles {roundSummary.lifecycleLoadSummary?.vehiclesOwned ?? 0} / homes{" "}
-                  {roundSummary.lifecycleLoadSummary?.homesOwned ?? 0} / engaged{" "}
-                  {roundSummary.lifecycleLoadSummary?.engagedStudents ?? 0} / married{" "}
-                  {roundSummary.lifecycleLoadSummary?.marriedStudents ?? 0} / fixed lock{" "}
+                  生命周期负担：车辆 {roundSummary.lifecycleLoadSummary?.vehiclesOwned ?? 0} / 房产{" "}
+                  {roundSummary.lifecycleLoadSummary?.homesOwned ?? 0} / 订婚{" "}
+                  {roundSummary.lifecycleLoadSummary?.engagedStudents ?? 0} / 已婚{" "}
+                  {roundSummary.lifecycleLoadSummary?.marriedStudents ?? 0} / 固定成本锁定{" "}
                   {roundSummary.lifecycleLoadSummary?.fixedCostLocked ?? 0}
                 </p>
-                <p>Lifecycle cue: {roundSummary.lifecycleCue ?? "--"}</p>
+                <p>生命周期提示：{roundSummary.lifecycleCue ?? "--"}</p>
               </>
             ) : null}
-            <p>Teacher cue: {roundSummary.teacherCue ?? "--"}</p>
+            <p>教师提示：{roundSummary.teacherCue ?? "--"}</p>
           </>
         )}
       </article>
 
       <article className="panel page-panel">
-        <h3>Ranking Summary</h3>
+        <h3>排行榜摘要</h3>
         {ranking.length === 0 ? (
-          <p>No ranking data yet.</p>
+          <p>当前还没有排行榜数据。</p>
         ) : (
           <div className="student-list">
             {ranking.map((row) => (
@@ -179,7 +175,7 @@ export function TeacherPrintPage(props: TeacherPrintPageProps) {
                   #{row.rank} {row.displayName}
                 </strong>
                 <span>
-                  {row.roleId} | score {row.finalScore} | net worth {row.netWorth}
+                  {row.roleId} | 分数 {row.finalScore} | 净资产 {row.netWorth}
                 </span>
               </div>
             ))}

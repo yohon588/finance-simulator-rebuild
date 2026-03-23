@@ -566,24 +566,24 @@ function getApiErrorMessage(action: string, error: unknown): string {
   if (error instanceof ApiError) {
     const code = error.code ?? "";
     const messages: Record<string, string> = {
-      ROOM_NOT_FOUND: "Classroom not found.",
-      ROOM_CLOSED: "This classroom is already closed and no longer accepts new students.",
-      ROOM_FULL: "This classroom has reached its student limit.",
-      DISPLAY_NAME_TAKEN: "This display name is already taken in the classroom.",
-      ROUND_NOT_OPEN: "This round is not open yet.",
-      ROUND_NOT_LOCKED: "The teacher must lock the round before settling.",
-      ROUND_ALREADY_ACTIVE: "A round is already active. Lock or settle it before opening another one.",
-      ROUND_CLOSED: "The classroom has finished or been archived.",
-      INVALID_ROOM_INPUT: "Please complete the teacher name and classroom name.",
-      INVALID_JOIN_INPUT: "Please complete the room code, name, and role before joining.",
-      INVALID_DECISION_INPUT: "The decision package is incomplete.",
-      UNAUTHORIZED: "Your session is no longer valid. Please enter the classroom again."
+      ROOM_NOT_FOUND: "未找到课堂。",
+      ROOM_CLOSED: "该课堂已关闭，不能再加入新学生。",
+      ROOM_FULL: "该课堂人数已达上限。",
+      DISPLAY_NAME_TAKEN: "该显示名称已被本课堂其他学生使用。",
+      ROUND_NOT_OPEN: "本回合还未开放。",
+      ROUND_NOT_LOCKED: "教师需要先锁定回合，才能结算。",
+      ROUND_ALREADY_ACTIVE: "当前已有进行中的回合，请先锁定或结算。",
+      ROUND_CLOSED: "该课堂已完成或已归档。",
+      INVALID_ROOM_INPUT: "请填写教师姓名和课堂名称。",
+      INVALID_JOIN_INPUT: "请填写课堂码、名称和角色。",
+      INVALID_DECISION_INPUT: "决策内容不完整。",
+      UNAUTHORIZED: "当前会话已失效，请重新进入课堂。"
     };
 
-    return messages[code] ?? `${action} failed (${code || error.status}).`;
+    return messages[code] ?? `${action}失败（${code || error.status}）。`;
   }
 
-  return `${action} failed.`;
+  return `${action}失败。`;
 }
 
 export function App() {
@@ -626,7 +626,7 @@ export function App() {
           setHistoryPayload(null);
           setRoundDetailPayload(null);
           setStudentRoundDetailPayload(null);
-          setError("Session expired. Please join again.");
+          setError("会话已过期，请重新进入课堂。");
         }
       })
       .finally(() => {
@@ -658,7 +658,7 @@ export function App() {
           setHistoryPayload(null);
           setRoundDetailPayload(null);
           setStudentRoundDetailPayload(null);
-          setError("Session expired. Please join again.");
+          setError("会话已过期，请重新进入课堂。");
         });
     }, 5000);
 
@@ -679,7 +679,7 @@ export function App() {
           setScreenPayload(nextScreen);
         })
         .catch(() => {
-          setError("Failed to refresh screen.");
+          setError("刷新大屏失败。");
         });
     }, 6000);
 
@@ -700,7 +700,7 @@ export function App() {
           setHistoryPayload(nextHistory);
         })
         .catch(() => {
-          setError("Failed to refresh teacher history.");
+          setError("刷新教师历史记录失败。");
         });
     }, 7000);
 
@@ -711,10 +711,10 @@ export function App() {
 
   const subtitle = useMemo(() => {
     if (!session || !payload) {
-      return "Auth, room creation, join flow, dice, open, lock, settle, debt view, and decision submit are wired into the rebuild shell.";
+      return "支持教师建房、学生入房、掷骰子、开回合、锁定、结算、债务查看和决策提交流程。";
     }
 
-    return `Class ${payload.classroom.code} | Round ${payload.round.no} | Status ${payload.round.status}`;
+    return `课堂 ${payload.classroom.code} | 第 ${payload.round.no} 回合 | 状态 ${payload.round.status}`;
   }, [payload, session]);
 
   async function handleCreateRoom(input: CreateRoomInput) {
@@ -731,7 +731,7 @@ export function App() {
       setStudentRoundDetailPayload(null);
       setTeacherView("dashboard");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Create classroom", caughtError));
+      setError(getApiErrorMessage("创建课堂", caughtError));
     } finally {
       setLoading(false);
     }
@@ -751,7 +751,7 @@ export function App() {
       setStudentRoundDetailPayload(null);
       setStudentView("dashboard");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Join classroom", caughtError));
+      setError(getApiErrorMessage("加入课堂", caughtError));
     } finally {
       setLoading(false);
     }
@@ -768,7 +768,7 @@ export function App() {
       setRoundDetailPayload(null);
       setStudentRoundDetailPayload(null);
     } catch (caughtError) {
-      setError(getApiErrorMessage("Archive classroom", caughtError));
+      setError(getApiErrorMessage("归档课堂", caughtError));
     } finally {
       setLoading(false);
     }
@@ -786,7 +786,7 @@ export function App() {
       setStudentRoundDetailPayload(null);
       setTeacherView("dashboard");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Clean storage", caughtError));
+      setError(getApiErrorMessage("清理存储", caughtError));
     } finally {
       setLoading(false);
     }
@@ -804,7 +804,7 @@ export function App() {
       setStudentRoundDetailPayload(null);
       setTeacherView("dashboard");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Reset room", caughtError));
+      setError(getApiErrorMessage("重置课堂", caughtError));
     } finally {
       setLoading(false);
     }
@@ -824,7 +824,7 @@ export function App() {
       link.click();
       URL.revokeObjectURL(href);
     } catch (caughtError) {
-      setError(getApiErrorMessage("Export CSV", caughtError));
+      setError(getApiErrorMessage("导出 CSV", caughtError));
     } finally {
       setLoading(false);
     }
@@ -838,7 +838,7 @@ export function App() {
       const nextPayload = await apiClient.openRound<ClassroomPayload>(session.token, { eventId });
       setPayload(nextPayload);
     } catch (caughtError) {
-      setError(getApiErrorMessage("Open round", caughtError));
+      setError(getApiErrorMessage("开放回合", caughtError));
     } finally {
       setLoading(false);
     }
@@ -852,7 +852,7 @@ export function App() {
       const nextPayload = await apiClient.lockRound<ClassroomPayload>(session.token);
       setPayload(nextPayload);
     } catch (caughtError) {
-      setError(getApiErrorMessage("Lock round", caughtError));
+      setError(getApiErrorMessage("锁定回合", caughtError));
     } finally {
       setLoading(false);
     }
@@ -866,7 +866,7 @@ export function App() {
       const nextPayload = await apiClient.settleRound<ClassroomPayload>(session.token);
       setPayload(nextPayload);
     } catch (caughtError) {
-      setError(getApiErrorMessage("Settle round", caughtError));
+      setError(getApiErrorMessage("结算回合", caughtError));
     } finally {
       setLoading(false);
     }
@@ -880,7 +880,7 @@ export function App() {
       const nextPayload = await apiClient.rollDice<ClassroomPayload>(session.token);
       setPayload(nextPayload);
     } catch (caughtError) {
-      setError(getApiErrorMessage("Roll dice", caughtError));
+      setError(getApiErrorMessage("掷骰子", caughtError));
     } finally {
       setLoading(false);
     }
@@ -896,7 +896,7 @@ export function App() {
       setStudentRoundDetailPayload(null);
       setStudentView("dashboard");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Submit decision", caughtError));
+      setError(getApiErrorMessage("提交决策", caughtError));
     } finally {
       setLoading(false);
     }
@@ -928,7 +928,7 @@ export function App() {
       setHistoryPayload(nextHistory);
       setTeacherView("archives");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Load teacher history", caughtError));
+      setError(getApiErrorMessage("加载教师历史", caughtError));
     } finally {
       setLoading(false);
     }
@@ -942,7 +942,7 @@ export function App() {
       const nextHistory = await apiClient.getTeacherHistory<ClassroomPayload>(session.token);
       setHistoryPayload(nextHistory);
     } catch (caughtError) {
-      setError(getApiErrorMessage("Refresh teacher history", caughtError));
+      setError(getApiErrorMessage("刷新教师历史", caughtError));
     } finally {
       setLoading(false);
     }
@@ -957,7 +957,7 @@ export function App() {
       setRoundDetailPayload(nextDetail);
       setTeacherView("round");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Load round detail", caughtError));
+      setError(getApiErrorMessage("加载回合详情", caughtError));
     } finally {
       setLoading(false);
     }
@@ -972,7 +972,7 @@ export function App() {
       setStudentRoundDetailPayload(nextDetail);
       setStudentView("round");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Load student round review", caughtError));
+      setError(getApiErrorMessage("加载学生回合复盘", caughtError));
     } finally {
       setLoading(false);
     }
@@ -988,7 +988,7 @@ export function App() {
       setScreenPayload(nextScreen);
       setTeacherView("screen");
     } catch (caughtError) {
-      setError(getApiErrorMessage("Open screen", caughtError));
+      setError(getApiErrorMessage("打开大屏", caughtError));
     } finally {
       setLoading(false);
     }
@@ -1001,12 +1001,12 @@ export function App() {
       const nextScreen = await apiClient.getScreen<ClassroomPayload>({ roomCode });
       setScreenPayload(nextScreen);
     } catch (caughtError) {
-      setError(getApiErrorMessage("Refresh screen", caughtError));
+      setError(getApiErrorMessage("刷新大屏", caughtError));
     }
   }
 
   return (
-    <ShellLayout title="Finance Simulator Rebuild" subtitle={subtitle}>
+    <ShellLayout title="个人理财教学模拟器" subtitle={subtitle}>
       {!session ? (
         <AuthPage
           loading={loading}
@@ -1090,11 +1090,11 @@ export function App() {
       )}
       {session?.role === "student" && payload?.latestLedger ? (
         <div className="action-row top-gap">
-          <button type="button" onClick={() => setStudentView("ledger")}>
-            View Ledger
+            <button type="button" onClick={() => setStudentView("ledger")}>
+            查看账单
           </button>
           <button type="button" className="ghost-button" onClick={() => setStudentView("dashboard")}>
-            Back To Dashboard
+            返回首页
           </button>
         </div>
       ) : null}

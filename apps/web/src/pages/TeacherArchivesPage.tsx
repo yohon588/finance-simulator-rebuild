@@ -78,24 +78,24 @@ export function TeacherArchivesPage(props: TeacherArchivesPageProps) {
     <section className="page-stack">
       <article className="panel dashboard-hero">
         <div>
-          <p className="eyebrow">Teacher Archives</p>
-          <h2>Round History And Snapshots</h2>
-          <p>Use this page for class replay and archived classroom states.</p>
+          <p className="eyebrow">教师归档</p>
+          <h2>回合历史与课堂快照</h2>
+          <p>用于教师复盘课堂过程和查看已归档的课堂状态。</p>
         </div>
         <div className="action-row">
           <button type="button" onClick={() => void props.onRefresh?.()} disabled={props.loading}>
-            Refresh
+            刷新
           </button>
           <button type="button" className="ghost-button" onClick={props.onBack}>
-            Back
+            返回
           </button>
         </div>
       </article>
 
       <article className="panel page-panel">
-        <h3>Round History</h3>
+        <h3>回合历史</h3>
         {roundHistory.length === 0 ? (
-          <p>No settled round history yet.</p>
+          <p>当前还没有已结算的回合历史。</p>
         ) : (
           <div className="student-list">
             {roundHistory
@@ -104,62 +104,62 @@ export function TeacherArchivesPage(props: TeacherArchivesPageProps) {
               .map((item) => (
                 <div key={`${item.roundNo}-${item.settledAt}`} className="archive-card">
                   <strong>
-                    Round {item.roundNo} | {item.eventTitle ?? "Macro Event"}
+                    第 {item.roundNo} 回合 | {item.eventTitle ?? "宏观事件"}
                   </strong>
                   <span>
-                    Avg score {item.avgScore ?? 0} | submitted {item.submitted ?? 0} | {item.settledAt}
+                    平均分 {item.avgScore ?? 0} | 已提交 {item.submitted ?? 0} | {item.settledAt}
                   </span>
                   <span>
-                    Top 3:{" "}
+                    前三名：{" "}
                     {(item.rankingTop3 ?? [])
                       .map((entry) => `${entry.rank}.${entry.displayName}(${entry.finalScore})`)
                       .join(" / ") || "--"}
                   </span>
                   <span>
-                    Drivers:{" "}
+                    主要驱动：{" "}
                     {(item.teachingSummary?.topDrivers ?? [])
                       .map((entry) => `${entry.label} ${entry.total}`)
                       .join(" / ") || "--"}
                   </span>
                   <span>
-                    Dice mix:{" "}
+                    骰子分布：{" "}
                     {(item.teachingSummary?.diceCategories ?? [])
                       .map((entry) => `${entry.category} x${entry.count}`)
                       .join(" / ") || "--"}
                   </span>
                   <span>
-                    Protection: protected {item.teachingSummary?.protectionSummary?.protectedStudents ?? 0} | debt stress{" "}
+                    保护与压力：保护命中 {item.teachingSummary?.protectionSummary?.protectedStudents ?? 0} | 债务压力{" "}
                     {item.teachingSummary?.protectionSummary?.stressedStudents ?? 0} | high risk{" "}
                     {item.teachingSummary?.protectionSummary?.highRiskStudents ?? 0}
                   </span>
                   <span>
-                    Modifier impact: supportive {item.teachingSummary?.protectionSummary?.supportiveHits ?? 0} |
-                    amplified {item.teachingSummary?.protectionSummary?.amplifiedHits ?? 0}
+                    修正影响：保护型 {item.teachingSummary?.protectionSummary?.supportiveHits ?? 0} |
+                    放大型 {item.teachingSummary?.protectionSummary?.amplifiedHits ?? 0}
                   </span>
                   <span>
-                    Lifecycle: vehicles {item.teachingSummary?.lifecycleLoadSummary?.vehiclesOwned ?? 0} / homes{" "}
-                    {item.teachingSummary?.lifecycleLoadSummary?.homesOwned ?? 0} / engaged{" "}
-                    {item.teachingSummary?.lifecycleLoadSummary?.engagedStudents ?? 0} / married{" "}
-                    {item.teachingSummary?.lifecycleLoadSummary?.marriedStudents ?? 0} / fixed lock{" "}
+                    生命周期负担：车辆 {item.teachingSummary?.lifecycleLoadSummary?.vehiclesOwned ?? 0} / 房产{" "}
+                    {item.teachingSummary?.lifecycleLoadSummary?.homesOwned ?? 0} / 订婚{" "}
+                    {item.teachingSummary?.lifecycleLoadSummary?.engagedStudents ?? 0} / 已婚{" "}
+                    {item.teachingSummary?.lifecycleLoadSummary?.marriedStudents ?? 0} / 固定成本锁定{" "}
                     {item.teachingSummary?.lifecycleLoadSummary?.fixedCostLocked ?? 0}
                   </span>
-                  <span>Lifecycle cue: {item.teachingSummary?.lifecycleCue ?? "--"}</span>
+                  <span>生命周期提示：{item.teachingSummary?.lifecycleCue ?? "--"}</span>
                   <span>
-                    Risk focus:{" "}
+                    风险焦点：{" "}
                     {(item.teachingSummary?.topRiskTags ?? [])
                       .map((entry) => `${entry.tag}(${entry.count})`)
                       .join(" / ") || "--"}
                   </span>
-                  <span>Teacher cue: {item.teachingSummary?.teacherCue ?? "--"}</span>
+                  <span>教师提示：{item.teachingSummary?.teacherCue ?? "--"}</span>
                   <button
                     type="button"
                     onClick={() => void props.onOpenRoundDetail?.(item.roundNo)}
                     disabled={props.loading}
                   >
-                    Open Detail
+                    打开详情
                   </button>
                   <span>
-                    Teaching cue: compare why the same macro event produced different outcomes across the top three.
+                    教学提示：对比为什么同样的宏观事件，会让不同学生出现完全不同的结果。
                   </span>
                 </div>
               ))}
@@ -168,9 +168,9 @@ export function TeacherArchivesPage(props: TeacherArchivesPageProps) {
       </article>
 
       <article className="panel page-panel">
-        <h3>Snapshots</h3>
+        <h3>课堂快照</h3>
         {archives.length === 0 ? (
-          <p>No archives yet.</p>
+          <p>当前还没有归档。</p>
         ) : (
           <div className="student-list">
             {archives.map((archive) => (
@@ -179,26 +179,26 @@ export function TeacherArchivesPage(props: TeacherArchivesPageProps) {
                   {archive.classroom.name} | {archive.classroom.code}
                 </strong>
                 <span>
-                  Round {archive.round.no} | {archive.round.status} | {archive.archivedAt}
+                  第 {archive.round.no} 回合 | {archive.round.status} | {archive.archivedAt}
                 </span>
                 <span>
-                  Avg score {archive.classProfile?.avgScore ?? 0} | Avg net worth{" "}
+                  平均分 {archive.classProfile?.avgScore ?? 0} | 平均净资产{" "}
                   {archive.classProfile?.avgNetWorth ?? 0}
                 </span>
                 <span>
-                  Snapshot drivers:{" "}
+                  快照驱动：{" "}
                   {(archive.teachingSummary?.topDrivers ?? [])
                     .map((entry) => `${entry.label} ${entry.total}`)
                     .join(" / ") || "--"}
                 </span>
                 <span>
-                  Snapshot risks:{" "}
+                  快照风险：{" "}
                   {(archive.teachingSummary?.topRiskTags ?? [])
                     .map((entry) => `${entry.tag}(${entry.count})`)
                     .join(" / ") || "--"}
                 </span>
                 <span>
-                  Leader: {archive.ranking?.[0]?.displayName ?? "--"} / {archive.ranking?.[0]?.finalScore ?? 0}
+                  第一名：{archive.ranking?.[0]?.displayName ?? "--"} / {archive.ranking?.[0]?.finalScore ?? 0}
                 </span>
               </div>
             ))}
