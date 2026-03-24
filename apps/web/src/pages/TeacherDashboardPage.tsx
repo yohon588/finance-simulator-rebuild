@@ -173,7 +173,6 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
     });
   }, [props.payload?.currentEvent?.eventId, eventOptions]);
 
-
   const selectedEvent = eventOptions.find((event) => event.eventId === selectedEventId) ?? eventOptions[0] ?? null;
 
   return (
@@ -232,14 +231,25 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
                 <button
                   type="button"
                   disabled={props.loading || eventOptions.length === 0 || !canOpenRound}
+                  title={!canOpenRound ? "只有在“待开放”状态，才能发布并开放新回合。" : undefined}
                   onClick={() => props.onOpenRound(selectedEventId)}
                 >
                   发布并开放
                 </button>
-                <button type="button" disabled={props.loading || !canLockRound} onClick={props.onLockRound}>
+                <button
+                  type="button"
+                  disabled={props.loading || !canLockRound}
+                  title={!canLockRound ? "教师先发布并开放回合后，才能锁定回合。" : undefined}
+                  onClick={props.onLockRound}
+                >
                   锁定回合
                 </button>
-                <button type="button" disabled={props.loading || !canSettleRound} onClick={props.onSettleRound}>
+                <button
+                  type="button"
+                  disabled={props.loading || !canSettleRound}
+                  title={!canSettleRound ? "教师先锁定回合后，才能结算回合。" : undefined}
+                  onClick={props.onSettleRound}
+                >
                   结算回合
                 </button>
                 <button type="button" className="ghost-button" disabled={props.loading || !canResetRoom} onClick={props.onResetRoom}>
