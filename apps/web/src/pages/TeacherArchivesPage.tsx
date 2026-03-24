@@ -1,3 +1,5 @@
+import { formatRoundStatus } from "../lib/display";
+
 type TeacherArchivesPageProps = {
   onBack: () => void;
   loading?: boolean;
@@ -179,7 +181,7 @@ export function TeacherArchivesPage(props: TeacherArchivesPageProps) {
                   {archive.classroom.name} | {archive.classroom.code}
                 </strong>
                 <span>
-                  第 {archive.round.no} 回合 | {archive.round.status} | {archive.archivedAt}
+                  第 {archive.round.no} 回合 | {formatRoundStatus(archive.round.status)} | {archive.archivedAt}
                 </span>
                 <span>
                   平均分 {archive.classProfile?.avgScore ?? 0} | 平均净资产{" "}
