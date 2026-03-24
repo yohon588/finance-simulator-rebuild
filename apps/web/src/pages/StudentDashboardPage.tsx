@@ -103,6 +103,7 @@ type StudentDashboardPageProps = {
         debtRatio: number;
         dsr: number;
         emergencyMonths: number;
+        finalScore?: number;
       };
       riskTags: string[];
     };
@@ -115,6 +116,14 @@ type StudentDashboardPageProps = {
   };
 };
 
+function currency(value?: number) {
+  return `¥${Number(value ?? 0).toLocaleString("zh-CN")}`;
+}
+
+function percent(value?: number) {
+  return `${Number(value ?? 0).toFixed(1)}%`;
+}
+
 export function StudentDashboardPage(props: StudentDashboardPageProps) {
   const { payload } = props;
   const metrics = payload.student.metrics;
@@ -123,371 +132,348 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
   const showRetirement = moduleOpt?.retirement !== false;
   const showLegacy = moduleOpt?.legacy !== false;
   const showRealEstate = moduleOpt?.realestate !== false;
+  const assets = payload.student.assets ?? {};
+  const assetRows = [
+    ["现金", payload.student.cash, "应急金与流动性"],
+    ["A1 银行存款", assets.A1 ?? 0, "低波动现金管理"],
+    ["A4 债券基金", assets.A4 ?? 0, "防守型配置"],
+    ["A5 股票基金", assets.A5 ?? 0, "成长型基金配置"],
+    ["A6 股票", assets.A6 ?? 0, "个股风险更高"],
+    ["A7 虚拟币", assets.A7 ?? 0, "高波动资产"],
+    ["A8 期权", assets.A8 ?? 0, "方向性高风险资产"],
+    ["A9 赌博/诈骗", assets.A9 ?? 0, "极高风险行为"]
+  ];
+  const prepFlags = payload.student.prepFlags;
+  const insuranceFlags = payload.student.insuranceFlags;
+  const latestRoundNo = payload.latestLedger?.roundNo ?? payload.roundHistory?.[payload.roundHistory.length - 1]?.roundNo;
 
   return (
     <section className="page-stack">
       <article className="panel dashboard-hero">
         <div>
-          <p className="eyebrow">学生首页</p>
+          <p className="eyebrow">学生课堂面板</p>
           <h2>{payload.student.displayName}</h2>
           <p>
-            {payload.classroom.name} | {payload.classroom.code} | {payload.student.roleId}
+            {payload.classroom.name} | 课堂码 {payload.classroom.code} | 角色 {payload.student.roleId}
           </p>
         </div>
         <div className="action-row">
           <button type="button" onClick={props.onRefresh} disabled={props.loading}>
-            刷新
+            刷新数据
           </button>
           <button type="button" onClick={props.onGoDecision} disabled={props.loading}>
-            去做决策
+            去做本轮决策
           </button>
           <button type="button" onClick={props.onGoDebts} disabled={props.loading}>
-            查看债务
+            查看债务明细
           </button>
           <button
             type="button"
             className="ghost-button"
-            onClick={() => props.onOpenRoundDetail(payload.latestLedger?.roundNo ?? payload.round.no - 1)}
-            disabled={props.loading || !(payload.roundHistory?.length || payload.latestLedger)}
+            onClick={() => latestRoundNo && props.onOpenRoundDetail(latestRoundNo)}
+            disabled={props.loading || !latestRoundNo}
           >
-            回合复盘
+            查看回合复盘
           </button>
           <button type="button" onClick={props.onRollDice} disabled={props.loading}>
-            掷骰子
+            掷个人骰子
           </button>
           <button type="button" className="ghost-button" onClick={props.onLogout}>
-            退出登录
+            退出课堂
           </button>
         </div>
       </article>
 
-      <section className="metric-grid">
-        <article className="panel metric-card">
-          <span>回合状态</span>
-          <strong>
-            第 {payload.round.no} 回合 / 共 {payload.round.total ?? "--"} 回合 / {formatRoundStatus(payload.round.status)}
-          </strong>
-        </article>
-        <article className="panel metric-card">
-          <span>净资产</span>
-          <strong>{metrics.netWorth}</strong>
-        </article>
-        <article className="panel metric-card">
-          <span>负债率</span>
-          <strong>{metrics.debtRatio}</strong>
-        </article>
-        <article className="panel metric-card">
-          <span>DSR</span>
-          <strong>{metrics.dsr}</strong>
-        </article>
-        <article className="panel metric-card">
-          <span>应急金月数</span>
-          <strong>{metrics.emergencyMonths}</strong>
-        </article>
-        <article className="panel metric-card">
-          <span>现金</span>
-          <strong>{payload.student.cash}</strong>
-        </article>
-      </section>
-
-      <article className="panel page-panel">
-        <h3>预算摘要</h3>
-        <p>工资收入：{payload.budget?.salary ?? payload.student.baseSalary}</p>
-        <p>基础必需支出：{payload.budget?.mandatoryLiving ?? "--"}</p>
-        <p>最低还款：{payload.budget?.minDebtPay ?? "--"}</p>
-        <p>车辆固定支出：{payload.budget?.vehicleMandatory ?? 0}</p>
-        {showRealEstate ? <p>住房固定支出：{payload.budget?.housingMandatory ?? 0}</p> : null}
-        <p>家庭固定支出：{payload.budget?.familyMandatory ?? 0}</p>
-        <p>可借额度：{payload.budget?.borrowLimit ?? "--"}</p>
-      </article>
-
-      <article className="panel page-panel">
-        <h3>当前持仓</h3>
-        {payload.student.assets ? (
-          <div className="market-grid">
-            {Object.entries(payload.student.assets).map(([asset, value]) => (
-              <div key={asset} className="market-item">
-                <span>{asset}</span>
-                <strong>{value}</strong>
+      <section className="dashboard-grid">
+        <div className="dashboard-main">
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">课堂状态</p>
+                <h3>
+                  第 {payload.round.no} / {payload.round.total ?? "--"} 回合
+                </h3>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p>当前还没有已记录资产。</p>
-        )}
-      </article>
+              <span className="info-tag">{formatRoundStatus(payload.round.status)}</span>
+            </div>
+            <div className="metric-grid dense">
+              <article className="metric-card compact">
+                <span>净资产</span>
+                <strong>{currency(metrics.netWorth)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>负债率</span>
+                <strong>{percent(metrics.debtRatio)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>偿债率 DSR</span>
+                <strong>{percent(metrics.dsr)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>应急金月数</span>
+                <strong>{metrics.emergencyMonths.toFixed(1)} 月</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>综合得分</span>
+                <strong>{Number(metrics.finalScore ?? 0).toFixed(1)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>现金</span>
+                <strong>{currency(payload.student.cash)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>本轮工资入账</span>
+                <strong>{currency(payload.budget?.salary ?? payload.student.baseSalary)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>本轮必扣生活费</span>
+                <strong>{currency(payload.budget?.mandatoryLiving)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>最低还款</span>
+                <strong>{currency(payload.budget?.minDebtPay)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>可借额度</span>
+                <strong>{currency(payload.budget?.borrowLimit)}</strong>
+              </article>
+              <article className="metric-card compact">
+                <span>车辆固定支出</span>
+                <strong>{currency(payload.budget?.vehicleMandatory)}</strong>
+              </article>
+              {showRealEstate ? (
+                <article className="metric-card compact">
+                  <span>房产固定支出</span>
+                  <strong>{currency(payload.budget?.housingMandatory)}</strong>
+                </article>
+              ) : null}
+            </div>
+          </article>
 
-      <article className="panel page-panel">
-        <h3>车辆</h3>
-        {payload.student.vehicle?.owned ? (
-          <div className="student-list">
-            <div className="student-row">
-              <strong>是否持有</strong>
-              <span>是</span>
-            </div>
-            <div className="student-row">
-              <strong>车辆价值</strong>
-              <span>{payload.student.vehicle.value ?? 0}</span>
-            </div>
-            <div className="student-row">
-              <strong>月供 / 养车成本</strong>
-              <span>
-                {payload.student.vehicle.monthlyPayment ?? 0} / {payload.student.vehicle.maintenance ?? 0}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <p>当前还没有购车。</p>
-        )}
-      </article>
-
-      {showRealEstate ? (
-        <article className="panel page-panel">
-          <h3>住房</h3>
-          {payload.student.house?.owned ? (
-            <div className="student-list">
-              <div className="student-row">
-                <strong>是否持有</strong>
-                <span>是</span>
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">开始事件</p>
+                <h3>{payload.currentEvent?.title ?? "等待教师发布本轮事件"}</h3>
               </div>
-              <div className="student-row">
-                <strong>房屋价值</strong>
-                <span>{payload.student.house.value ?? 0}</span>
-              </div>
-              <div className="student-row">
-                <strong>月供 / 维护成本</strong>
-                <span>
-                  {payload.student.house.monthlyPayment ?? 0} / {payload.student.house.maintenance ?? 0}
-                </span>
-              </div>
+              <button type="button" className="ghost-button" onClick={props.onGoDecision} disabled={props.loading}>
+                先看事件，再做配置
+              </button>
             </div>
-          ) : (
-            <p>当前还没有购房。</p>
-          )}
-        </article>
-      ) : null}
-
-      <article className="panel page-panel">
-        <h3>家庭生命周期</h3>
-        <div className="student-list">
-          <div className="student-row">
-            <strong>阶段</strong>
-            <span>{formatFamilyStage(payload.student.family?.stage)}</span>
-          </div>
-          <div className="student-row">
-            <strong>每月家庭支出</strong>
-            <span>{payload.student.family?.monthlySupport ?? 0}</span>
-          </div>
-        </div>
-      </article>
-
-      <article className="panel page-panel">
-        <h3>准备状态</h3>
-        {payload.student.prepFlags ? (
-          <>
+            <p>{payload.currentEvent?.transmissionPath ?? "老师开放回合后，这里会显示事件如何传导到资产、消费和现金流。"}</p>
             <div className="tag-row">
-              <span className={payload.student.prepFlags.learningReady ? "info-tag" : "risk-tag"}>学习准备</span>
-              <span className={payload.student.prepFlags.healthReady ? "info-tag" : "risk-tag"}>健康准备</span>
-              <span className={payload.student.prepFlags.deviceReady ? "info-tag" : "risk-tag"}>设备准备</span>
-              <span className={payload.student.prepFlags.reserveReady ? "info-tag" : "risk-tag"}>储备准备</span>
-              <span className={payload.student.prepFlags.safetyReady ? "info-tag" : "risk-tag"}>安全准备</span>
-              {showTax ? (
-                <span className={payload.student.prepFlags.taxReady ? "info-tag" : "risk-tag"}>税务准备</span>
-              ) : null}
-              {showRetirement ? (
-                <span className={payload.student.prepFlags.retirementReady ? "info-tag" : "risk-tag"}>退休准备</span>
-              ) : null}
-              {showLegacy ? (
-                <span className={payload.student.prepFlags.legacyReady ? "info-tag" : "risk-tag"}>家庭支持准备</span>
-              ) : null}
-              <span className={payload.student.prepFlags.debtStressed ? "risk-tag" : "info-tag"}>债务压力</span>
-            </div>
-            <div className="student-list top-gap">
-              <div className="student-row">
-                <strong>学习准备</strong>
-                <span>最近的学习投入可以提升创收机会，也能缓冲部分冲击。</span>
-              </div>
-              <div className="student-row">
-                <strong>健康准备</strong>
-                <span>健康保障会减少医疗事件带来的自付损失。</span>
-              </div>
-              <div className="student-row">
-                <strong>设备准备</strong>
-                <span>设备维护可以减少手机、电脑故障带来的损失。</span>
-              </div>
-              <div className="student-row">
-                <strong>储备准备</strong>
-                <span>应急金和额外储备能帮助你吸收医疗与居住冲击。</span>
-              </div>
-              <div className="student-row">
-                <strong>安全准备</strong>
-                <span>安全设置会降低诈骗和账户安全事件造成的损失。</span>
-              </div>
-              {showTax ? (
-                <div className="student-row">
-                  <strong>税务准备</strong>
-                  <span>税务预留能让新增收入少受税费和手续摩擦影响。</span>
-                </div>
-              ) : null}
-              {showRetirement ? (
-                <div className="student-row">
-                  <strong>退休准备</strong>
-                  <span>长期储蓄纪律能减少短期超支冲动，并让长期目标更清晰。</span>
-                </div>
-              ) : null}
-              {showLegacy ? (
-                <div className="student-row">
-                  <strong>家庭支持准备</strong>
-                  <span>家庭支持储备能缓冲照护、亲属求助和人情支出冲击。</span>
-                </div>
-              ) : null}
-              <div className="student-row">
-                <strong>债务压力</strong>
-                <span>债务压力会放大同样事件的损失，也会提高整体风险。</span>
-              </div>
-            </div>
-          </>
-        ) : (
-          <p>当前还没有准备状态。</p>
-        )}
-      </article>
-
-      <article className="panel page-panel">
-        <h3>保障层</h3>
-        <div className="tag-row">
-          <span className={payload.student.insuranceFlags?.healthCover ? "info-tag" : "risk-tag"}>健康保障</span>
-          <span className={payload.student.insuranceFlags?.accidentCover ? "info-tag" : "risk-tag"}>意外保障</span>
-          <span className={payload.student.insuranceFlags?.cyberCover ? "info-tag" : "risk-tag"}>网络安全保障</span>
-        </div>
-        <div className="student-list top-gap">
-          <div className="student-row">
-            <strong>健康保障</strong>
-            <span>可以降低普通医疗和治疗事件的冲击。</span>
-          </div>
-          <div className="student-row">
-            <strong>意外保障</strong>
-            <span>更针对突发受伤和意外事故类损失。</span>
-          </div>
-          <div className="student-row">
-            <strong>网络安全保障</strong>
-            <span>能抵消一部分诈骗、盗刷和账号安全损失。</span>
-          </div>
-        </div>
-      </article>
-
-      <article className="panel page-panel">
-        <h3>宏观事件</h3>
-        {payload.currentEvent ? (
-          <>
-            <p>{payload.currentEvent.title}</p>
-            <p>{payload.currentEvent.transmissionPath ?? "事件传导路径暂未生成。"}</p>
-            <div className="tag-row">
-              {(payload.currentEvent.teachingPoints ?? []).map((point) => (
+              {(payload.currentEvent?.teachingPoints ?? []).map((point) => (
                 <span key={point} className="info-tag">
                   {point}
                 </span>
               ))}
             </div>
-          </>
-        ) : (
-          <p>当前还没有开放事件，请等待老师开放回合。</p>
-        )}
-      </article>
+            <div className="market-grid top-gap">
+              {payload.market
+                ? Object.entries(payload.market).map(([asset, value]) => (
+                    <div key={asset} className="market-item">
+                      <span>{asset}</span>
+                      <strong className={value >= 0 ? "positive" : "negative"}>
+                        {Number(value).toFixed(2)}%
+                      </strong>
+                    </div>
+                  ))
+                : null}
+            </div>
+          </article>
 
-      <article className="panel page-panel">
-        <h3>个人骰子事件</h3>
-        {payload.currentDice ? (
-          <>
-            <p>
-              点数 {payload.currentDice.roll} | 类别 {payload.currentDice.category}
-            </p>
-            <p>{payload.currentDice.card?.title ?? "个人骰子事件"}</p>
-            <p>现金影响：{payload.currentDice.appliedEffect?.cash ?? 0}</p>
-            <p>{payload.currentDice.card?.knowledgePoint ?? ""}</p>
-            {(payload.currentDice.appliedEffect?.modifiers ?? []).length > 0 ? (
-              <div className="student-list top-gap">
-                {payload.currentDice.appliedEffect?.modifiers?.map((item) => (
-                  <div key={item} className="student-row">
-                    <strong>修正说明</strong>
-                    <span>{item}</span>
-                  </div>
-                ))}
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">资产负债概览</p>
+                <h3>把钱放在哪，风险就在哪里</h3>
               </div>
-            ) : null}
-          </>
-        ) : (
-          <p>本回合还没有掷出个人骰子事件。</p>
-        )}
-      </article>
-
-      <article className="panel page-panel">
-        <h3>市场影响</h3>
-        {payload.market ? (
-          <div className="market-grid">
-            {Object.entries(payload.market).map(([asset, value]) => (
-              <div key={asset} className="market-item">
-                <span>{asset}</span>
-                <strong className={value >= 0 ? "positive" : "negative"}>
-                  {value}%
-                </strong>
+              <span className={payload.student.riskTags.length ? "risk-tag" : "info-tag"}>
+                {payload.student.riskTags.length ? payload.student.riskTags.join(" / ") : "当前风险可控"}
+              </span>
+            </div>
+            <div className="table-grid">
+              <div className="table-grid-head">
+                <span>项目</span>
+                <span>数值</span>
+                <span>说明</span>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p>开放回合后会显示市场影响。</p>
-        )}
-      </article>
-
-      <article className="panel page-panel">
-        <h3>最近回合</h3>
-        {!payload.roundHistory?.length ? (
-          <p>当前还没有可复盘的已结算回合。</p>
-        ) : (
-          <div className="student-list">
-            {payload.roundHistory
-              .slice()
-              .reverse()
-              .slice(0, 4)
-              .map((round) => (
-                <div key={round.roundNo} className="student-row">
-                  <strong>
-                    第 {round.roundNo} 回合 | {round.eventTitle ?? "宏观事件"}
-                  </strong>
-                  <span>{round.settledAt}</span>
-                  <button type="button" className="ghost-button" onClick={() => props.onOpenRoundDetail(round.roundNo)}>
-                    复盘
-                  </button>
+              {assetRows.map(([label, value, note]) => (
+                <div key={label} className="table-grid-row">
+                  <span>{label}</span>
+                  <span>{currency(Number(value))}</span>
+                  <span>{note}</span>
                 </div>
               ))}
-          </div>
-        )}
-      </article>
+              <div className="table-grid-row">
+                <span>本轮基础生活费</span>
+                <span>{currency(payload.budget?.mandatoryLiving)}</span>
+                <span>系统必扣，直接影响应急金月数</span>
+              </div>
+              <div className="table-grid-row">
+                <span>应急金月数分母</span>
+                <span>{currency((payload.budget?.mandatoryLiving ?? 0) + (payload.budget?.vehicleMandatory ?? 0) + (payload.budget?.minDebtPay ?? 0))}</span>
+                <span>基础生活费 + 车辆固定支出 + 最低还款</span>
+              </div>
+            </div>
+          </article>
 
-      <article className="panel page-panel">
-        <h3>风险标签</h3>
-        {payload.student.riskTags.length === 0 ? (
-          <p>当前没有风险标签。</p>
-        ) : (
-          <div className="tag-row">
-            {payload.student.riskTags.map((tag) => (
-              <span key={tag} className="risk-tag">
-                {tag}
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">车辆 / 房产 / 家庭</p>
+                <h3>长期固定成本会锁住现金流</h3>
+              </div>
+            </div>
+            <div className="three-col-grid">
+              <div className="compact-panel">
+                <strong>车辆</strong>
+                <p>{payload.student.vehicle?.owned ? "已持有" : "未持有"}</p>
+                <p>车辆估值 {currency(payload.student.vehicle?.value)}</p>
+                <p>月供 {currency(payload.student.vehicle?.monthlyPayment)} / 养车 {currency(payload.student.vehicle?.maintenance)}</p>
+              </div>
+              {showRealEstate ? (
+                <div className="compact-panel">
+                  <strong>房产</strong>
+                  <p>{payload.student.house?.owned ? "已持有" : "未持有"}</p>
+                  <p>房屋估值 {currency(payload.student.house?.value)}</p>
+                  <p>月供 {currency(payload.student.house?.monthlyPayment)} / 维护 {currency(payload.student.house?.maintenance)}</p>
+                </div>
+              ) : null}
+              <div className="compact-panel">
+                <strong>家庭阶段</strong>
+                <p>{formatFamilyStage(payload.student.family?.stage)}</p>
+                <p>每轮家庭支持 {currency(payload.student.family?.monthlySupport)}</p>
+                <p>这部分支出会直接压缩投资和应急空间</p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <aside className="dashboard-side">
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">本轮操作</p>
+                <h3>{payload.currentDecision ? "已提交，可继续覆盖" : "尚未提交"}</h3>
+              </div>
+              <span className={payload.currentDecision ? "info-tag" : "risk-tag"}>
+                {payload.currentDecision ? "已提交" : "未提交"}
               </span>
-            ))}
-          </div>
-        )}
-      </article>
+            </div>
+            <div className="student-list">
+              <div className="student-row">
+                <strong>状态</strong>
+                <span>{formatRoundStatus(payload.round.status)}</span>
+              </div>
+              <div className="student-row">
+                <strong>决策入口</strong>
+                <button type="button" onClick={props.onGoDecision} disabled={props.loading}>
+                  打开决策页
+                </button>
+              </div>
+              <div className="student-row">
+                <strong>债务入口</strong>
+                <button type="button" className="ghost-button" onClick={props.onGoDebts} disabled={props.loading}>
+                  查看债务
+                </button>
+              </div>
+            </div>
+          </article>
 
-      <article className="panel page-panel">
-        <h3>提交状态</h3>
-        {payload.currentDecision ? (
-          <p>
-            已提交，本次幂等键为 {payload.currentDecision.idempotencyKey}，提交时间 {payload.currentDecision.submittedAt}
-          </p>
-        ) : (
-          <p>本回合还没有提交决策。</p>
-        )}
-      </article>
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">个人骰子事件</p>
+                <h3>{payload.currentDice?.card?.title ?? "还没有掷出本轮个人事件"}</h3>
+              </div>
+            </div>
+            {payload.currentDice ? (
+              <>
+                <p>
+                  点数 {payload.currentDice.roll} / 类别 {payload.currentDice.category}
+                </p>
+                <p>现金影响 {currency(payload.currentDice.appliedEffect?.cash)}</p>
+                <p>{payload.currentDice.card?.knowledgePoint ?? "这张卡会告诉你为什么同样的意外，对不同准备程度的人影响不同。"}</p>
+                <div className="student-list">
+                  {(payload.currentDice.appliedEffect?.modifiers ?? []).map((item) => (
+                    <div key={item} className="student-row">
+                      <strong>修正因素</strong>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p>点击“掷个人骰子”后，这里会出现本轮额外事件及其影响。</p>
+            )}
+          </article>
+
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">准备状态</p>
+                <h3>你不是在碰运气，而是在做准备</h3>
+              </div>
+            </div>
+            <div className="tag-row">
+              <span className={prepFlags?.learningReady ? "info-tag" : "risk-tag"}>学习准备</span>
+              <span className={prepFlags?.healthReady ? "info-tag" : "risk-tag"}>健康准备</span>
+              <span className={prepFlags?.deviceReady ? "info-tag" : "risk-tag"}>设备准备</span>
+              <span className={prepFlags?.reserveReady ? "info-tag" : "risk-tag"}>储备准备</span>
+              <span className={prepFlags?.safetyReady ? "info-tag" : "risk-tag"}>安全准备</span>
+              {showTax ? <span className={prepFlags?.taxReady ? "info-tag" : "risk-tag"}>税务准备</span> : null}
+              {showRetirement ? <span className={prepFlags?.retirementReady ? "info-tag" : "risk-tag"}>退休准备</span> : null}
+              {showLegacy ? <span className={prepFlags?.legacyReady ? "info-tag" : "risk-tag"}>家庭支持准备</span> : null}
+              <span className={prepFlags?.debtStressed ? "risk-tag" : "info-tag"}>债务压力</span>
+            </div>
+          </article>
+
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">保障层</p>
+                <h3>保险和安全设置是第二层缓冲</h3>
+              </div>
+            </div>
+            <div className="tag-row">
+              <span className={insuranceFlags?.healthCover ? "info-tag" : "risk-tag"}>健康保障</span>
+              <span className={insuranceFlags?.accidentCover ? "info-tag" : "risk-tag"}>意外保障</span>
+              <span className={insuranceFlags?.cyberCover ? "info-tag" : "risk-tag"}>网络安全保障</span>
+            </div>
+          </article>
+
+          <article className="panel page-panel">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">最近回合</p>
+                <h3>课后可以逐轮复盘</h3>
+              </div>
+            </div>
+            {!payload.roundHistory?.length ? (
+              <p>当前还没有已结算回合。</p>
+            ) : (
+              <div className="student-list">
+                {payload.roundHistory
+                  .slice()
+                  .reverse()
+                  .slice(0, 4)
+                  .map((round) => (
+                    <div key={round.roundNo} className="student-row">
+                      <div>
+                        <strong>第 {round.roundNo} 回合</strong>
+                        <div>{round.eventTitle ?? "宏观事件"}</div>
+                      </div>
+                      <button type="button" className="ghost-button" onClick={() => props.onOpenRoundDetail(round.roundNo)}>
+                        复盘
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </article>
+        </aside>
+      </section>
     </section>
   );
 }
