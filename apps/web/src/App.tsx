@@ -662,14 +662,8 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
 
   return {
     ...nextPayload,
-    classroom: {
-      ...nextPayload.classroom,
-      status: formatRoundStatus(nextPayload.classroom.status)
-    },
-    round: {
-      ...nextPayload.round,
-      status: formatRoundStatus(nextPayload.round.status)
-    },
+    classroom: nextPayload.classroom,
+    round: nextPayload.round,
     currentEvent: nextPayload.currentEvent
       ? {
           ...nextPayload.currentEvent,
@@ -867,10 +861,7 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
       : nextPayload.studentRoundDetail,
     archives: nextPayload.archives?.map((archive) => ({
       ...archive,
-      round: {
-        ...archive.round,
-        status: formatRoundStatus(archive.round.status)
-      }
+      round: archive.round
     })),
     roundHistory: localizeRoundHistory,
     currentRoundSummary: nextPayload.currentRoundSummary
@@ -1038,7 +1029,7 @@ export function App() {
       return "支持教师建房、学生入房、掷骰子、开回合、锁定、结算、债务查看和决策提交流程。";
     }
 
-    return `课堂 ${payload.classroom.code} | 第 ${payload.round.no} 回合 | 状态 ${payload.round.status}`;
+    return `课堂 ${payload.classroom.code} | 第 ${payload.round.no} 回合 | 状态 ${formatRoundStatus(payload.round.status)}`;
   }, [payload, session]);
 
   async function handleCreateRoom(input: CreateRoomInput) {
