@@ -1,18 +1,21 @@
 import { useState } from "react";
 
-import type { CreateRoomInput, JoinRoomInput } from "../api/client";
+import type { CreateRoomInput, JoinRoomInput, RejoinStudentInput, RejoinTeacherInput } from "../api/client";
 
 type AuthPageProps = {
   loading: boolean;
   error: string | null;
   onCreateRoom: (input: CreateRoomInput) => Promise<void>;
   onJoinRoom: (input: JoinRoomInput) => Promise<void>;
+  onRejoinStudent: (input: RejoinStudentInput) => Promise<void>;
+  onRejoinTeacher: (input: RejoinTeacherInput) => Promise<void>;
 };
 
 export function AuthPage(props: AuthPageProps) {
   const [roomCode, setRoomCode] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [roleId, setRoleId] = useState("R2");
+  const [teacherRoomCode, setTeacherRoomCode] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [roomName, setRoomName] = useState("");
 
@@ -48,11 +51,23 @@ export function AuthPage(props: AuthPageProps) {
         >
           {props.loading ? "处理中..." : "加入课堂"}
         </button>
+        <button
+          type="button"
+          className="ghost-button"
+          disabled={props.loading}
+          onClick={() => props.onRejoinStudent({ roomCode, displayName })}
+        >
+          {props.loading ? "处理中..." : "重新进入课堂"}
+        </button>
       </article>
 
       <article className="panel auth-panel">
         <p className="eyebrow">教师端</p>
         <h2>创建课堂</h2>
+        <label>
+          自定义课堂码
+          <input value={teacherRoomCode} onChange={(event) => setTeacherRoomCode(event.target.value.toUpperCase())} />
+        </label>
         <label>
           教师姓名
           <input value={teacherName} onChange={(event) => setTeacherName(event.target.value)} />
@@ -64,9 +79,17 @@ export function AuthPage(props: AuthPageProps) {
         <button
           type="button"
           disabled={props.loading}
-          onClick={() => props.onCreateRoom({ teacherName, roomName })}
+          onClick={() => props.onCreateRoom({ teacherName, roomName, roomCode: teacherRoomCode })}
         >
           {props.loading ? "处理中..." : "创建课堂"}
+        </button>
+        <button
+          type="button"
+          className="ghost-button"
+          disabled={props.loading}
+          onClick={() => props.onRejoinTeacher({ roomCode: teacherRoomCode, teacherName })}
+        >
+          {props.loading ? "处理中..." : "重新进入课堂"}
         </button>
         {props.error ? <p className="form-error">{props.error}</p> : null}
       </article>

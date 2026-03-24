@@ -43,7 +43,12 @@ export function createRouter(context) {
         sendJson(response, 400, { error: "INVALID_ROOM_INPUT" });
         return;
       }
-      sendJson(response, 201, await store.createRoom(body));
+      const payload = await store.createRoom(body);
+      if (payload.error === "ROOM_CODE_TAKEN") {
+        sendJson(response, 409, payload);
+        return;
+      }
+      sendJson(response, 201, payload);
       return;
     }
 
@@ -55,6 +60,44 @@ export function createRouter(context) {
       }
       const payload = await store.joinRoom(body);
       if (payload.error === "ROOM_CLOSED" || payload.error === "ROOM_FULL" || payload.error === "DISPLAY_NAME_TAKEN") {
+        sendJson(response, 409, payload);
+        return;
+      }
+      if (payload.error) {
+        sendJson(response, 404, payload);
+        return;
+      }
+      sendJson(response, 200, payload);
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/teacher/rejoin") {
+      const body = await readJsonBody(request);
+      if (!body.roomCode || !body.teacherName) {
+        sendJson(response, 400, { error: "INVALID_TEACHER_REJOIN_INPUT" });
+        return;
+      }
+      const payload = await store.rejoinTeacher(body);
+      if (payload.error === "ROOM_CLOSED" || payload.error === "TEACHER_NAME_MISMATCH") {
+        sendJson(response, 409, payload);
+        return;
+      }
+      if (payload.error) {
+        sendJson(response, 404, payload);
+        return;
+      }
+      sendJson(response, 200, payload);
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/student/rejoin") {
+      const body = await readJsonBody(request);
+      if (!body.roomCode || !body.displayName) {
+        sendJson(response, 400, { error: "INVALID_STUDENT_REJOIN_INPUT" });
+        return;
+      }
+      const payload = await store.rejoinStudent(body);
+      if (payload.error === "ROOM_CLOSED") {
         sendJson(response, 409, payload);
         return;
       }

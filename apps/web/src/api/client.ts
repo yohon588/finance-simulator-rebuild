@@ -1,12 +1,23 @@
 export type CreateRoomInput = {
   teacherName: string;
   roomName: string;
+  roomCode?: string;
 };
 
 export type JoinRoomInput = {
   roomCode: string;
   displayName: string;
   roleId: string;
+};
+
+export type RejoinTeacherInput = {
+  roomCode: string;
+  teacherName: string;
+};
+
+export type RejoinStudentInput = {
+  roomCode: string;
+  displayName: string;
 };
 
 export type OpenRoundInput = {
@@ -101,6 +112,20 @@ export const apiClient = {
   },
   joinRoom<T>(input: JoinRoomInput) {
     return requestJson<T>("/api/join", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+  },
+  rejoinTeacher<T>(input: RejoinTeacherInput) {
+    return requestJson<T>("/api/teacher/rejoin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+  },
+  rejoinStudent<T>(input: RejoinStudentInput) {
+    return requestJson<T>("/api/student/rejoin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input)

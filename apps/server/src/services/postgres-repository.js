@@ -93,10 +93,9 @@ export async function createPostgresRepository(connectionString) {
 
       for (const debt of student.debts ?? []) {
         await client.query(
-          `insert into student_debts (id, user_id, debt_type, creditor, principal, rate_monthly, min_pay, missed_rounds, status)
-           values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          `insert into student_debts (user_id, debt_type, creditor, principal, rate_monthly, min_pay, missed_rounds, status)
+           values ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [
-            debt.id,
             student.id,
             debt.type ?? "CONSUMER",
             debt.creditor,

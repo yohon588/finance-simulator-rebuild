@@ -343,6 +343,13 @@ function createSession(role, userId, roomId) {
   };
 }
 
+function normalizeRoomCode(value) {
+  return String(value ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "-");
+}
+
 function pickDiceCard(roll, student, room) {
   const category = diceCategoryByRoll[roll];
   const cards = diceEvents.filter((event) => event.category === category);
@@ -1474,11 +1481,19 @@ function buildScreenPayload(room) {
 export function createMemoryStore(moduleConfig, options = {}) {
   const repository = options.repository ?? createInMemoryRepository();
 
-  async function createRoom({ teacherName, roomName }) {
+  async function createRoom({ teacherName, roomName, roomCode }) {
+    const requestedRoomCode = normalizeRoomCode(roomCode);
+    if (requestedRoomCode) {
+      const existingRoom = await repository.findRoomByCode(requestedRoomCode);
+      if (existingRoom) {
+        return { error: "ROOM_CODE_TAKEN" };
+      }
+    }
+
     const teacherUserId = crypto.randomUUID();
     const room = {
       id: crypto.randomUUID(),
-      code: `FIN-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      code: requestedRoomCode || `FIN-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
       name: roomName,
       teacherName,
       teacherUserId,
@@ -1495,7 +1510,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
   }
 
   async function joinRoom({ roomCode, displayName, roleId }) {
-    const room = await repository.findRoomByCode(roomCode);
+    const room = await repository.findRoomByCode(normalizeRoomCode(roomCode));
     if (!room) {
       return { error: "ROOM_NOT_FOUND" };
     }
@@ -1517,6 +1532,51 @@ export function createMemoryStore(moduleConfig, options = {}) {
     await repository.saveSession(session);
 
     return buildStudentPayload(room, session, moduleConfig);
+  }
+
+  async function rejoinStudent({ roomCode, displayName }) {
+    const room = await repository.findRoomByCode(normalizeRoomCode(roomCode));
+    if (!room) {
+      return { error: "ROOM_NOT_FOUND" };
+    }
+    if (room.round.status === "archived") {
+      return { error: "ROOM_CLOSED" };
+    }
+
+    const student = (room.students ?? []).find(
+      (item) => item.displayName.trim().toLowerCase() === String(displayName ?? "").trim().toLowerCase()
+    );
+    if (!student) {
+      return { error: "STUDENT_NOT_FOUND" };
+    }
+
+    const session = createSession("student", student.id, room.id);
+    await repository.saveSession(session);
+
+    return buildStudentPayload(room, session, moduleConfig);
+  }
+
+  async function rejoinTeacher({ roomCode, teacherName }) {
+    const room = await repository.findRoomByCode(normalizeRoomCode(roomCode));
+    if (!room) {
+      return { error: "ROOM_NOT_FOUND" };
+    }
+    if (room.round.status === "archived") {
+      return { error: "ROOM_CLOSED" };
+    }
+    if (!teacherName || room.teacherName.trim().toLowerCase() !== teacherName.trim().toLowerCase()) {
+      return { error: "TEACHER_NAME_MISMATCH" };
+    }
+
+    if (!room.teacherUserId) {
+      room.teacherUserId = crypto.randomUUID();
+      await repository.saveRoom(room);
+    }
+
+    const session = createSession("teacher", room.teacherUserId, room.id);
+    await repository.saveSession(session);
+
+    return buildTeacherPayload(room, session, moduleConfig);
   }
 
   async function openRound(token, eventId) {
@@ -2127,6 +2187,8 @@ export function createMemoryStore(moduleConfig, options = {}) {
   return {
     createRoom,
     joinRoom,
+    rejoinStudent,
+    rejoinTeacher,
     openRound,
     lockRound,
     settleRound,

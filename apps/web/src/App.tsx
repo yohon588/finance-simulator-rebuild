@@ -5,6 +5,8 @@ import {
   ApiError,
   type CreateRoomInput,
   type JoinRoomInput,
+  type RejoinStudentInput,
+  type RejoinTeacherInput,
   type SubmitDecisionInput
 } from "./api/client";
 import { ShellLayout } from "./components/layout/ShellLayout";
@@ -571,16 +573,40 @@ type ClassroomPayload = {
 const STORAGE_KEY = "finance-rebuild-session";
 
 function readStoredSession(): SessionState | null {
-  const raw = window.sessionStorage.getItem(STORAGE_KEY);
-  if (!raw) {
+  const localRaw = window.localStorage.getItem(STORAGE_KEY);
+  if (localRaw) {
+    try {
+      return JSON.parse(localRaw) as SessionState;
+    } catch {
+      window.localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+  }
+
+  const legacyRaw = window.sessionStorage.getItem(STORAGE_KEY);
+  if (!legacyRaw) {
     return null;
   }
 
   try {
-    return JSON.parse(raw) as SessionState;
+    const parsed = JSON.parse(legacyRaw) as SessionState;
+    window.localStorage.setItem(STORAGE_KEY, legacyRaw);
+    window.sessionStorage.removeItem(STORAGE_KEY);
+    return parsed;
   } catch {
     return null;
   }
+}
+
+function persistSession(session: SessionState) {
+  const serialized = JSON.stringify(session);
+  window.localStorage.setItem(STORAGE_KEY, serialized);
+  window.sessionStorage.removeItem(STORAGE_KEY);
+}
+
+function clearPersistedSession() {
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.sessionStorage.removeItem(STORAGE_KEY);
 }
 
 function getApiErrorMessage(action: string, error: unknown): string {
@@ -918,7 +944,7 @@ export function App() {
       })
       .catch(() => {
         if (!cancelled) {
-          window.sessionStorage.removeItem(STORAGE_KEY);
+          clearPersistedSession();
           setSession(null);
           setPayload(null);
           setHistoryPayload(null);
@@ -950,7 +976,7 @@ export function App() {
           setPayload(localizePayload(nextPayload));
         })
         .catch(() => {
-          window.sessionStorage.removeItem(STORAGE_KEY);
+          clearPersistedSession();
           setSession(null);
           setPayload(null);
           setHistoryPayload(null);
@@ -1021,7 +1047,7 @@ export function App() {
     try {
       const nextPayload = await apiClient.createRoom<ClassroomPayload>(input);
       const nextSession: SessionState = { token: nextPayload.token, role: "teacher" };
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
+      persistSession(nextSession);
       setSession(nextSession);
       setPayload(localizePayload(nextPayload));
       setHistoryPayload(null);
@@ -1041,7 +1067,7 @@ export function App() {
     try {
       const nextPayload = await apiClient.joinRoom<ClassroomPayload>(input);
       const nextSession: SessionState = { token: nextPayload.token, role: "student" };
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
+      persistSession(nextSession);
       setSession(nextSession);
       setPayload(localizePayload(nextPayload));
       setHistoryPayload(null);
@@ -1050,6 +1076,46 @@ export function App() {
       setStudentView("dashboard");
     } catch (caughtError) {
       setError(getApiErrorMessage("加入课堂", caughtError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRejoinStudent(input: RejoinStudentInput) {
+    setLoading(true);
+    setError(null);
+    try {
+      const nextPayload = await apiClient.rejoinStudent<ClassroomPayload>(input);
+      const nextSession: SessionState = { token: nextPayload.token, role: "student" };
+      persistSession(nextSession);
+      setSession(nextSession);
+      setPayload(localizePayload(nextPayload));
+      setHistoryPayload(null);
+      setRoundDetailPayload(null);
+      setStudentRoundDetailPayload(null);
+      setStudentView("dashboard");
+    } catch (caughtError) {
+      setError(getApiErrorMessage("重新进入课堂", caughtError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRejoinTeacher(input: RejoinTeacherInput) {
+    setLoading(true);
+    setError(null);
+    try {
+      const nextPayload = await apiClient.rejoinTeacher<ClassroomPayload>(input);
+      const nextSession: SessionState = { token: nextPayload.token, role: "teacher" };
+      persistSession(nextSession);
+      setSession(nextSession);
+      setPayload(localizePayload(nextPayload));
+      setHistoryPayload(null);
+      setRoundDetailPayload(null);
+      setStudentRoundDetailPayload(null);
+      setTeacherView("dashboard");
+    } catch (caughtError) {
+      setError(getApiErrorMessage("重新进入课堂", caughtError));
     } finally {
       setLoading(false);
     }
@@ -1205,7 +1271,7 @@ export function App() {
   }
 
   function handleLogout() {
-    window.sessionStorage.removeItem(STORAGE_KEY);
+    clearPersistedSession();
     setSession(null);
     setPayload(null);
     setHistoryPayload(null);
@@ -1311,6 +1377,8 @@ export function App() {
           error={error}
           onCreateRoom={handleCreateRoom}
           onJoinRoom={handleJoinRoom}
+          onRejoinStudent={handleRejoinStudent}
+          onRejoinTeacher={handleRejoinTeacher}
         />
       ) : session.role === "student" && payload?.student ? (
         studentView === "dashboard" ? (

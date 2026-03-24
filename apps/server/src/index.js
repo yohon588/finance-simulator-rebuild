@@ -6,6 +6,7 @@ import { loadModuleConfig } from "./config/module-config.js";
 import { createRouter } from "./routes/index.js";
 import { createFileRepository, createInMemoryRepository } from "./services/repository.js";
 import { createPostgresRepository } from "./services/postgres-repository.js";
+import { sendJson } from "./services/response.js";
 
 const port = Number(process.env.PORT || 3100);
 const moduleConfig = loadModuleConfig();
@@ -77,7 +78,14 @@ const server = http.createServer((request, response) => {
   if (tryServeWeb(request, response)) {
     return;
   }
-  router(request, response);
+  Promise.resolve(router(request, response)).catch((error) => {
+    console.error("Unhandled request error:", error);
+    if (!response.headersSent) {
+      sendJson(response, 500, { error: "INTERNAL_SERVER_ERROR" });
+      return;
+    }
+    response.end();
+  });
 });
 
 server.listen(port, () => {
