@@ -1055,7 +1055,11 @@ export function App() {
       setStudentRoundDetailPayload(null);
       setTeacherView("dashboard");
     } catch (caughtError) {
-      setError(getApiErrorMessage("创建课堂", caughtError));
+      if (caughtError instanceof ApiError && caughtError.code === "ROOM_CODE_TAKEN") {
+        setError("该课堂码已存在。如果这是你的课堂，请点击下方“重新进入课堂”。");
+      } else {
+        setError(getApiErrorMessage("创建课堂", caughtError));
+      }
     } finally {
       setLoading(false);
     }
