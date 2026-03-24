@@ -158,8 +158,21 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
   const [selectedEventId, setSelectedEventId] = useState(eventOptions[0]?.eventId ?? 1);
 
   useEffect(() => {
-    setSelectedEventId(props.payload?.currentEvent?.eventId ?? eventOptions[0]?.eventId ?? 1);
+    const currentEventId = props.payload?.currentEvent?.eventId;
+    if (typeof currentEventId === "number") {
+      setSelectedEventId(currentEventId);
+      return;
+    }
+
+    setSelectedEventId((currentSelectedEventId) => {
+      if (eventOptions.some((event) => event.eventId === currentSelectedEventId)) {
+        return currentSelectedEventId;
+      }
+
+      return eventOptions[0]?.eventId ?? 1;
+    });
   }, [props.payload?.currentEvent?.eventId, eventOptions]);
+
 
   const selectedEvent = eventOptions.find((event) => event.eventId === selectedEventId) ?? eventOptions[0] ?? null;
 
