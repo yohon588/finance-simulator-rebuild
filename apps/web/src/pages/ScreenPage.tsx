@@ -106,8 +106,8 @@ export function ScreenPage(props: ScreenPageProps) {
           <p className="eyebrow">课堂大屏</p>
           <h2>{props.payload?.classroom.name ?? "实时排行榜"}</h2>
           <p>
-            {props.payload?.classroom.code ?? "--"} | 第 {props.payload?.round.no ?? "--"} 回合 / 共{" "}
-            {props.payload?.round.total ?? "--"} 回合 / {formatRoundStatus(props.payload?.round.status)}
+            {props.payload?.classroom.code ?? "--"} | 第 {props.payload?.round.no ?? "--"} 回合 /{" "}
+            {formatRoundStatus(props.payload?.round.status)}
           </p>
         </div>
         <div className="action-row">

@@ -206,6 +206,15 @@ type ClassroomPayload = {
     missedRounds?: number;
     status: string;
   }>;
+  chartSeries?: Array<{
+    roundNo: number;
+    netWorth: number;
+    A4: number;
+    A5: number;
+    A6: number;
+    A7: number;
+    A8: number;
+  }>;
   eventOptions?: Array<{
     eventId: number;
     title: string;

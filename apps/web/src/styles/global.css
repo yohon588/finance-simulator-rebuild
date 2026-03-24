@@ -358,6 +358,120 @@ button:disabled {
   width: auto;
 }
 
+.chart-card {
+  display: grid;
+  gap: 14px;
+}
+
+.asset-chart-wrap {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.asset-pie {
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+}
+
+.pie-center-number {
+  font-size: 1.35rem;
+  font-weight: 700;
+  fill: var(--text);
+}
+
+.pie-center-label {
+  font-size: 0.82rem;
+  fill: var(--muted);
+}
+
+.chart-legend {
+  display: grid;
+  gap: 10px;
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.trend-chart {
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  border: 1px solid var(--line);
+}
+
+.chart-axis {
+  stroke: #d8e1ee;
+  stroke-width: 1;
+}
+
+.trend-meta,
+.trend-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.mini-tab {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+}
+
+.mini-tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.dice-stage {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.dice-face {
+  width: 100px;
+  height: 100px;
+  border-radius: 24px;
+  border: 1px solid #bcd0f3;
+  background: radial-gradient(circle at top left, #ffffff 0%, #e9f1ff 100%);
+  color: var(--primary);
+  font-size: 2rem;
+  font-weight: 700;
+  box-shadow: 0 12px 30px rgba(19, 102, 214, 0.12);
+}
+
+.dice-face.rolling {
+  animation: dice-shake 0.55s linear infinite;
+}
+
+.dice-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.muted-text {
+  color: var(--muted);
+}
+
 .app-error {
   margin: 16px 0 0;
   color: var(--danger);
@@ -411,13 +525,44 @@ button:disabled {
   color: var(--danger);
 }
 
+@keyframes dice-shake {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  25% {
+    transform: rotate(-8deg) scale(1.03);
+  }
+
+  50% {
+    transform: rotate(8deg) scale(0.98);
+  }
+
+  75% {
+    transform: rotate(-6deg) scale(1.02);
+  }
+
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
 @media (max-width: 960px) {
   .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-chart-wrap,
+  .dice-stage {
     grid-template-columns: 1fr;
   }
 
   .table-grid-head,
   .table-grid-row {
     grid-template-columns: 1fr;
+  }
+
+  .trend-labels {
+    flex-wrap: wrap;
   }
 }

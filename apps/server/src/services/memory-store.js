@@ -77,7 +77,6 @@ const gambleCatalog = {
   CASINO: { winRate: 0.05, winMultiple: 3 },
   SCAM: { winRate: 0.3, winMultiple: 0.2 }
 };
-const maxRounds = 8;
 const maxStudentsPerRoom = 60;
 const optionalConsumeModuleMap = {
   X1: "tax",
@@ -206,6 +205,19 @@ function createNextRound(previousRound) {
   nextRound.costIndex = previousRound?.costIndex ?? 1;
   nextRound.history = [...(previousRound?.history ?? [])];
   return nextRound;
+}
+
+function buildStudentChartSeries(student) {
+  const history = student?.history ?? [];
+  return history.map((ledger, index) => ({
+    roundNo: ledger?.roundNo ?? index + 1,
+    netWorth: roundCurrency(ledger?.endWorth ?? 0),
+    A4: Number(ledger?.assetPnl?.A4?.returnPct ?? 0),
+    A5: Number(ledger?.assetPnl?.A5?.returnPct ?? 0),
+    A6: Number(ledger?.assetPnl?.A6?.returnPct ?? 0),
+    A7: Number(ledger?.assetPnl?.A7?.returnPct ?? 0),
+    A8: Number(ledger?.assetPnl?.A8?.returnPct ?? 0)
+  }));
 }
 
 function getEventById(eventId) {
@@ -1348,8 +1360,7 @@ function buildTeacherPayload(room, session, moduleConfig) {
       status: room.round.status
     },
     round: {
-      ...room.round,
-      total: maxRounds
+      ...room.round
     },
     moduleConfig,
     currentEvent: room.round.eventId ? getEventById(room.round.eventId) : null,
@@ -1395,8 +1406,7 @@ function buildStudentPayload(room, session, moduleConfig) {
       status: room.round.status
     },
     round: {
-      ...room.round,
-      total: maxRounds
+      ...room.round
     },
     moduleConfig,
     currentEvent,
@@ -1406,6 +1416,7 @@ function buildStudentPayload(room, session, moduleConfig) {
     currentDice: student ? room.round.dice[student.id] ?? null : null,
     latestLedger: student?.latestLedger ?? null,
     debts: student ? student.debts : [],
+    chartSeries: student ? buildStudentChartSeries(student) : [],
     student,
     ranking: buildRanking(room.students).slice(0, 10),
     roundHistory: room.round.history ?? []
@@ -1451,8 +1462,7 @@ function buildScreenPayload(room) {
     round: {
       no: room.round.no,
       status: room.round.status,
-      eventId: room.round.eventId,
-      total: maxRounds
+      eventId: room.round.eventId
     },
     currentEvent: room.round.eventId ? getEventById(room.round.eventId) : null,
     ranking: buildRanking(room.students),
@@ -1489,7 +1499,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
     if (!room) {
       return { error: "ROOM_NOT_FOUND" };
     }
-    if (room.round.status === "archived" || room.round.status === "finished") {
+    if (room.round.status === "archived") {
       return { error: "ROOM_CLOSED" };
     }
     if ((room.students?.length ?? 0) >= maxStudentsPerRoom) {
@@ -1522,7 +1532,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
     if (room.round.status === "open" || room.round.status === "locked") {
       return { error: "ROUND_ALREADY_ACTIVE" };
     }
-    if (room.round.status === "archived" || room.round.status === "finished") {
+    if (room.round.status === "archived") {
       return { error: "ROUND_CLOSED" };
     }
 
@@ -1634,12 +1644,6 @@ export function createMemoryStore(moduleConfig, options = {}) {
       teachingSummary
     });
     await repository.saveRoom(room);
-
-    if (room.round.no >= maxRounds) {
-      room.round.status = "finished";
-      await repository.saveRoom(room);
-      return buildTeacherPayload(room, session, moduleConfig);
-    }
 
     room.round = createNextRound(room.round);
     await repository.saveRoom(room);
@@ -2053,8 +2057,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
             teacherName: bundle.classroom.teacherName
           },
           round: {
-            ...bundle.round,
-            total: maxRounds
+            ...bundle.round
           },
           moduleConfig,
           currentEvent: bundle.currentEvent ?? (runtimeRoom.round?.eventId ? getEventById(runtimeRoom.round.eventId) : null),
@@ -2114,7 +2117,8 @@ export function createMemoryStore(moduleConfig, options = {}) {
       },
       round: firstRoom.round,
       roundMeta: {
-        total: maxRounds
+        total: null,
+        manualEnd: true
       },
       moduleConfig
     };
