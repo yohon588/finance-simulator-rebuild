@@ -1391,6 +1391,7 @@ export function App() {
           <StudentDecisionPage
             loading={loading}
             currentRoundId={payload.round.id}
+            roundStatus={payload.round.status}
             moduleConfig={payload.moduleConfig}
             onBack={() => setStudentView("dashboard")}
             onSubmitDecision={handleSubmitDecision}
