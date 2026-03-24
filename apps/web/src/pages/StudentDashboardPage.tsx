@@ -284,6 +284,7 @@ function AssetTrendChart({
 
 export function StudentDashboardPage(props: StudentDashboardPageProps) {
   const { payload } = props;
+  const canMakeDecision = payload.round.status === "open";
   const metrics = payload.student.metrics;
   const moduleOpt = payload.moduleConfig?.opt;
   const showTax = moduleOpt?.tax !== false;
@@ -400,7 +401,12 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
           <button type="button" onClick={props.onRefresh} disabled={props.loading}>
             刷新数据
           </button>
-          <button type="button" onClick={props.onGoDecision} disabled={props.loading}>
+          <button
+            type="button"
+            onClick={props.onGoDecision}
+            disabled={props.loading || !canMakeDecision}
+            title={canMakeDecision ? undefined : "教师开放回合后，学生才能提交本轮决策。"}
+          >
             去做本轮决策
           </button>
           <button type="button" onClick={props.onGoDebts} disabled={props.loading}>
@@ -493,7 +499,13 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
                 <p className="eyebrow">开始事件</p>
                 <h3>{payload.currentEvent?.title ?? "等待教师发布本轮事件"}</h3>
               </div>
-              <button type="button" className="ghost-button" onClick={props.onGoDecision} disabled={props.loading}>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={props.onGoDecision}
+                disabled={props.loading || !canMakeDecision}
+                title={canMakeDecision ? undefined : "教师开放回合后，这里才可以进入资产配置。"}
+              >
                 先看事件，再做配置
               </button>
             </div>
