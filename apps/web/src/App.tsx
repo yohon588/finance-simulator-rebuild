@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 
 import {
   apiClient,
@@ -633,6 +633,10 @@ function getApiErrorMessage(action: string, error: unknown): string {
   return `${action}失败。`;
 }
 
+function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 401 || error.code === "UNAUTHORIZED");
+}
+
 function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
   const localizeRoundHistory = nextPayload.roundHistory?.map((item) => ({
     ...item,
@@ -933,15 +937,20 @@ export function App() {
           setPayload(localizePayload(nextPayload));
         }
       })
-      .catch(() => {
+      .catch((caughtError) => {
         if (!cancelled) {
-          clearPersistedSession();
-          setSession(null);
-          setPayload(null);
-          setHistoryPayload(null);
-          setRoundDetailPayload(null);
-          setStudentRoundDetailPayload(null);
-          setError("会话已过期，请重新进入课堂。");
+          if (isUnauthorizedError(caughtError)) {
+            clearPersistedSession();
+            setSession(null);
+            setPayload(null);
+            setHistoryPayload(null);
+            setRoundDetailPayload(null);
+            setStudentRoundDetailPayload(null);
+            setError("会话已过期，请重新进入课堂。");
+            return;
+          }
+
+          setError("同步课堂状态失败，请稍后重试。");
         }
       })
       .finally(() => {
@@ -966,14 +975,19 @@ export function App() {
         .then((nextPayload) => {
           setPayload(localizePayload(nextPayload));
         })
-        .catch(() => {
-          clearPersistedSession();
-          setSession(null);
-          setPayload(null);
-          setHistoryPayload(null);
-          setRoundDetailPayload(null);
-          setStudentRoundDetailPayload(null);
-          setError("会话已过期，请重新进入课堂。");
+        .catch((caughtError) => {
+          if (isUnauthorizedError(caughtError)) {
+            clearPersistedSession();
+            setSession(null);
+            setPayload(null);
+            setHistoryPayload(null);
+            setRoundDetailPayload(null);
+            setStudentRoundDetailPayload(null);
+            setError("会话已过期，请重新进入课堂。");
+            return;
+          }
+
+          setError("课堂状态同步失败，已保留当前会话，请稍后重试。");
         });
     }, 5000);
 

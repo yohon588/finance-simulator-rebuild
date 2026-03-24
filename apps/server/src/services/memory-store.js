@@ -1517,11 +1517,17 @@ export function createMemoryStore(moduleConfig, options = {}) {
     if (room.round.status === "archived") {
       return { error: "ROOM_CLOSED" };
     }
+    const normalizedDisplayName = String(displayName ?? "").trim().toLowerCase();
+    const existingStudent = (room.students ?? []).find(
+      (student) => student.displayName.trim().toLowerCase() === normalizedDisplayName
+    );
+    if (existingStudent) {
+      const session = createSession("student", existingStudent.id, room.id);
+      await repository.saveSession(session);
+      return buildStudentPayload(room, session, moduleConfig);
+    }
     if ((room.students?.length ?? 0) >= maxStudentsPerRoom) {
       return { error: "ROOM_FULL" };
-    }
-    if ((room.students ?? []).some((student) => student.displayName.trim().toLowerCase() === displayName.trim().toLowerCase())) {
-      return { error: "DISPLAY_NAME_TAKEN" };
     }
 
     const student = buildStudentState(displayName, roleId);
