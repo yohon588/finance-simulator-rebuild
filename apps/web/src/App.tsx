@@ -8,6 +8,18 @@ import {
   type SubmitDecisionInput
 } from "./api/client";
 import { ShellLayout } from "./components/layout/ShellLayout";
+import {
+  formatDebtPool,
+  formatDebtStatus,
+  formatDiceCategory,
+  formatDriverLabel,
+  formatFamilyStage,
+  formatRiskTag,
+  formatRoleLabel,
+  formatRoundStatus,
+  localizeDiceCard,
+  localizeMacroEvent
+} from "./lib/display";
 import { AuthPage } from "./pages/AuthPage";
 import { ScreenPage } from "./pages/ScreenPage";
 import { TeacherArchivesPage } from "./pages/TeacherArchivesPage";
@@ -586,6 +598,283 @@ function getApiErrorMessage(action: string, error: unknown): string {
   return `${action}失败。`;
 }
 
+function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
+  const localizeRoundHistory = nextPayload.roundHistory?.map((item) => ({
+    ...item,
+    eventTitle:
+      localizeMacroEvent({
+        eventId: item.eventId,
+        title: item.eventTitle
+      })?.title ?? item.eventTitle,
+    teachingSummary: item.teachingSummary
+      ? {
+          ...item.teachingSummary,
+          topDrivers: item.teachingSummary.topDrivers?.map((entry) => ({
+            ...entry,
+            label: formatDriverLabel(entry.label)
+          })),
+          diceCategories: item.teachingSummary.diceCategories?.map((entry) => ({
+            ...entry,
+            category: formatDiceCategory(entry.category)
+          })),
+          topRiskTags: item.teachingSummary.topRiskTags?.map((entry) => ({
+            ...entry,
+            tag: formatRiskTag(entry.tag)
+          }))
+        }
+      : item.teachingSummary
+  }));
+
+  return {
+    ...nextPayload,
+    classroom: {
+      ...nextPayload.classroom,
+      status: formatRoundStatus(nextPayload.classroom.status)
+    },
+    round: {
+      ...nextPayload.round,
+      status: formatRoundStatus(nextPayload.round.status)
+    },
+    currentEvent: nextPayload.currentEvent
+      ? {
+          ...nextPayload.currentEvent,
+          ...localizeMacroEvent(nextPayload.currentEvent)
+        }
+      : nextPayload.currentEvent,
+    currentDice: nextPayload.currentDice
+      ? {
+          ...nextPayload.currentDice,
+          category: formatDiceCategory(nextPayload.currentDice.category),
+          card: nextPayload.currentDice.card
+            ? {
+                ...nextPayload.currentDice.card,
+                ...localizeDiceCard({
+                  id: (nextPayload.currentDice.card as { id?: string }).id,
+                  title: nextPayload.currentDice.card.title,
+                  knowledgePoint: nextPayload.currentDice.card.knowledgePoint
+                })
+              }
+            : undefined
+        }
+      : nextPayload.currentDice,
+    latestLedger: nextPayload.latestLedger
+      ? {
+          ...nextPayload.latestLedger,
+          riskTags: nextPayload.latestLedger.riskTags.map((tag) => formatRiskTag(tag)),
+          settlementSummary: nextPayload.latestLedger.settlementSummary.map((item) => formatDriverLabel(item)),
+          familyState: nextPayload.latestLedger.familyState
+            ? {
+                ...nextPayload.latestLedger.familyState,
+                stage: formatFamilyStage(nextPayload.latestLedger.familyState.stage)
+              }
+            : nextPayload.latestLedger.familyState,
+          debtChange: nextPayload.latestLedger.debtChange
+            ? {
+                ...nextPayload.latestLedger.debtChange,
+                allocateTo: formatDebtPool(nextPayload.latestLedger.debtChange.allocateTo),
+                bridgeTarget: formatDebtPool(nextPayload.latestLedger.debtChange.bridgeTarget),
+                items: nextPayload.latestLedger.debtChange.items?.map((item) => ({
+                  ...item,
+                  type: formatDebtPool(item.type),
+                  creditor: formatDebtPool(item.creditor),
+                  status: formatDebtStatus(item.status)
+                }))
+              }
+            : nextPayload.latestLedger.debtChange,
+          diceEvent: nextPayload.latestLedger.diceEvent
+            ? {
+                ...nextPayload.latestLedger.diceEvent,
+                ...localizeDiceCard({
+                  id: nextPayload.latestLedger.diceEvent.cardId ?? undefined,
+                  title: nextPayload.latestLedger.diceEvent.title,
+                  knowledgePoint: nextPayload.latestLedger.diceEvent.knowledgePoint,
+                  teacherNote: nextPayload.latestLedger.diceEvent.teacherNote
+                })
+              }
+            : nextPayload.latestLedger.diceEvent
+        }
+      : nextPayload.latestLedger,
+    eventOptions: nextPayload.eventOptions?.map((event) => ({
+      ...event,
+      ...localizeMacroEvent(event)
+    })),
+    ranking: nextPayload.ranking?.map((item) => ({
+      ...item,
+      roleId: formatRoleLabel(item.roleId)
+    })),
+    classProfile: nextPayload.classProfile
+      ? {
+          ...nextPayload.classProfile,
+          topRiskTags: nextPayload.classProfile.topRiskTags?.map((item) => ({
+            ...item,
+            tag: formatRiskTag(item.tag)
+          }))
+        }
+      : nextPayload.classProfile,
+    roundDetail: nextPayload.roundDetail
+      ? {
+          ...nextPayload.roundDetail,
+          eventTitle:
+            localizeMacroEvent({
+              title: nextPayload.roundDetail.eventTitle
+            })?.title ?? nextPayload.roundDetail.eventTitle,
+          teachingSummary: nextPayload.roundDetail.teachingSummary
+            ? {
+                ...nextPayload.roundDetail.teachingSummary,
+                topDrivers: nextPayload.roundDetail.teachingSummary.topDrivers?.map((entry) => ({
+                  ...entry,
+                  label: formatDriverLabel(entry.label)
+                })),
+                diceCategories: nextPayload.roundDetail.teachingSummary.diceCategories?.map((entry) => ({
+                  ...entry,
+                  category: formatDiceCategory(entry.category)
+                })),
+                topRiskTags: nextPayload.roundDetail.teachingSummary.topRiskTags?.map((entry) => ({
+                  ...entry,
+                  tag: formatRiskTag(entry.tag)
+                }))
+              }
+            : nextPayload.roundDetail.teachingSummary,
+          students: nextPayload.roundDetail.students?.map((student) => ({
+            ...student,
+            roleId: formatRoleLabel(student.roleId),
+            riskTags: student.riskTags.map((tag) => formatRiskTag(tag)),
+            family: student.family
+              ? {
+                  ...student.family,
+                  stage: formatFamilyStage(student.family.stage)
+                }
+              : student.family,
+            diceEvent: student.diceEvent
+              ? {
+                  ...student.diceEvent,
+                  category: formatDiceCategory(student.diceEvent.category),
+                  ...localizeDiceCard({
+                    title: student.diceEvent.title,
+                    knowledgePoint: student.diceEvent.knowledgePoint,
+                    teacherNote: student.diceEvent.teacherNote
+                  })
+                }
+              : student.diceEvent,
+            debtChange: student.debtChange
+              ? {
+                  ...student.debtChange,
+                  bridgeTarget: formatDebtPool(student.debtChange.bridgeTarget ?? undefined),
+                  items: student.debtChange.items?.map((item) => ({
+                    ...item,
+                    type: formatDebtPool(item.type),
+                    status: formatDebtStatus(item.status)
+                  }))
+                }
+              : student.debtChange,
+            topDrivers: student.topDrivers?.map((item) => ({
+              ...item,
+              label: formatDriverLabel(item.label)
+            }))
+          }))
+        }
+      : nextPayload.roundDetail,
+    studentRoundDetail: nextPayload.studentRoundDetail
+      ? {
+          ...nextPayload.studentRoundDetail,
+          eventTitle:
+            localizeMacroEvent({
+              title: nextPayload.studentRoundDetail.eventTitle
+            })?.title ?? nextPayload.studentRoundDetail.eventTitle,
+          family: nextPayload.studentRoundDetail.family
+            ? {
+                ...nextPayload.studentRoundDetail.family,
+                stage: formatFamilyStage(nextPayload.studentRoundDetail.family.stage)
+              }
+            : nextPayload.studentRoundDetail.family,
+          riskTags: nextPayload.studentRoundDetail.riskTags?.map((tag) => formatRiskTag(tag)),
+          topDrivers: nextPayload.studentRoundDetail.topDrivers?.map((item) => ({
+            ...item,
+            label: formatDriverLabel(item.label)
+          })),
+          ledger: nextPayload.studentRoundDetail.ledger
+            ? {
+                ...nextPayload.studentRoundDetail.ledger,
+                settlementSummary: nextPayload.studentRoundDetail.ledger.settlementSummary?.map((item) =>
+                  formatDriverLabel(item)
+                ),
+                familyState: nextPayload.studentRoundDetail.ledger.familyState
+                  ? {
+                      ...nextPayload.studentRoundDetail.ledger.familyState,
+                      stage: formatFamilyStage(nextPayload.studentRoundDetail.ledger.familyState.stage)
+                    }
+                  : nextPayload.studentRoundDetail.ledger.familyState,
+                debtChange: nextPayload.studentRoundDetail.ledger.debtChange
+                  ? {
+                      ...nextPayload.studentRoundDetail.ledger.debtChange,
+                      bridgeTarget: formatDebtPool(nextPayload.studentRoundDetail.ledger.debtChange.bridgeTarget ?? undefined),
+                      items: nextPayload.studentRoundDetail.ledger.debtChange.items?.map((item) => ({
+                        ...item,
+                        type: formatDebtPool(item.type),
+                        creditor: formatDebtPool(item.creditor),
+                        status: formatDebtStatus(item.status)
+                      }))
+                    }
+                  : nextPayload.studentRoundDetail.ledger.debtChange,
+                diceEvent: nextPayload.studentRoundDetail.ledger.diceEvent
+                  ? {
+                      ...nextPayload.studentRoundDetail.ledger.diceEvent,
+                      ...localizeDiceCard({
+                        title: nextPayload.studentRoundDetail.ledger.diceEvent.title,
+                        knowledgePoint: nextPayload.studentRoundDetail.ledger.diceEvent.knowledgePoint,
+                        teacherNote: nextPayload.studentRoundDetail.ledger.diceEvent.teacherNote
+                      })
+                    }
+                  : nextPayload.studentRoundDetail.ledger.diceEvent
+              }
+            : nextPayload.studentRoundDetail.ledger
+        }
+      : nextPayload.studentRoundDetail,
+    archives: nextPayload.archives?.map((archive) => ({
+      ...archive,
+      round: {
+        ...archive.round,
+        status: formatRoundStatus(archive.round.status)
+      }
+    })),
+    roundHistory: localizeRoundHistory,
+    currentRoundSummary: nextPayload.currentRoundSummary
+      ? {
+          ...nextPayload.currentRoundSummary,
+          topDrivers: nextPayload.currentRoundSummary.topDrivers?.map((item) => ({
+            ...item,
+            label: formatDriverLabel(item.label)
+          })),
+          diceCategories: nextPayload.currentRoundSummary.diceCategories?.map((item) => ({
+            ...item,
+            category: formatDiceCategory(item.category)
+          })),
+          topRiskTags: nextPayload.currentRoundSummary.topRiskTags?.map((item) => ({
+            ...item,
+            tag: formatRiskTag(item.tag)
+          }))
+        }
+      : nextPayload.currentRoundSummary,
+    student: nextPayload.student
+      ? {
+          ...nextPayload.student,
+          roleId: formatRoleLabel(nextPayload.student.roleId),
+          riskTags: nextPayload.student.riskTags.map((tag) => formatRiskTag(tag)),
+          family: nextPayload.student.family
+            ? {
+                ...nextPayload.student.family,
+                stage: formatFamilyStage(nextPayload.student.family.stage)
+              }
+            : nextPayload.student.family
+        }
+      : nextPayload.student,
+    students: nextPayload.students?.map((student) => ({
+      ...student,
+      roleId: formatRoleLabel(student.roleId)
+    }))
+  };
+}
+
 export function App() {
   const [session, setSession] = useState<SessionState | null>(() => readStoredSession());
   const [payload, setPayload] = useState<ClassroomPayload | null>(null);
@@ -615,7 +904,7 @@ export function App() {
       .getMe<ClassroomPayload>(session.token)
       .then((nextPayload) => {
         if (!cancelled) {
-          setPayload(nextPayload);
+          setPayload(localizePayload(nextPayload));
         }
       })
       .catch(() => {
@@ -649,7 +938,7 @@ export function App() {
       apiClient
         .getMe<ClassroomPayload>(session.token)
         .then((nextPayload) => {
-          setPayload(nextPayload);
+          setPayload(localizePayload(nextPayload));
         })
         .catch(() => {
           window.sessionStorage.removeItem(STORAGE_KEY);
@@ -676,7 +965,7 @@ export function App() {
       apiClient
         .getScreen<ClassroomPayload>({ roomCode: payload.classroom.code })
         .then((nextScreen) => {
-          setScreenPayload(nextScreen);
+          setScreenPayload(localizePayload(nextScreen));
         })
         .catch(() => {
           setError("刷新大屏失败。");
@@ -697,7 +986,7 @@ export function App() {
       apiClient
         .getTeacherHistory<ClassroomPayload>(session.token)
         .then((nextHistory) => {
-          setHistoryPayload(nextHistory);
+          setHistoryPayload(localizePayload(nextHistory));
         })
         .catch(() => {
           setError("刷新教师历史记录失败。");
@@ -725,7 +1014,7 @@ export function App() {
       const nextSession: SessionState = { token: nextPayload.token, role: "teacher" };
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
       setSession(nextSession);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
       setHistoryPayload(null);
       setRoundDetailPayload(null);
       setStudentRoundDetailPayload(null);
@@ -745,7 +1034,7 @@ export function App() {
       const nextSession: SessionState = { token: nextPayload.token, role: "student" };
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
       setSession(nextSession);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
       setHistoryPayload(null);
       setRoundDetailPayload(null);
       setStudentRoundDetailPayload(null);
@@ -763,7 +1052,7 @@ export function App() {
     setError(null);
     try {
       const nextPayload = await apiClient.archiveRoom<ClassroomPayload>(session.token);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
       setHistoryPayload(null);
       setRoundDetailPayload(null);
       setStudentRoundDetailPayload(null);
@@ -780,7 +1069,7 @@ export function App() {
     setError(null);
     try {
       const nextPayload = await apiClient.cleanupStorage<ClassroomPayload>(session.token);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
       setHistoryPayload(null);
       setRoundDetailPayload(null);
       setStudentRoundDetailPayload(null);
@@ -798,7 +1087,7 @@ export function App() {
     setError(null);
     try {
       const nextPayload = await apiClient.resetRoom<ClassroomPayload>(session.token);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
       setHistoryPayload(null);
       setRoundDetailPayload(null);
       setStudentRoundDetailPayload(null);
@@ -836,7 +1125,7 @@ export function App() {
     setError(null);
     try {
       const nextPayload = await apiClient.openRound<ClassroomPayload>(session.token, { eventId });
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
     } catch (caughtError) {
       setError(getApiErrorMessage("开放回合", caughtError));
     } finally {
@@ -850,7 +1139,7 @@ export function App() {
     setError(null);
     try {
       const nextPayload = await apiClient.lockRound<ClassroomPayload>(session.token);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
     } catch (caughtError) {
       setError(getApiErrorMessage("锁定回合", caughtError));
     } finally {
@@ -864,7 +1153,7 @@ export function App() {
     setError(null);
     try {
       const nextPayload = await apiClient.settleRound<ClassroomPayload>(session.token);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
     } catch (caughtError) {
       setError(getApiErrorMessage("结算回合", caughtError));
     } finally {
@@ -878,7 +1167,7 @@ export function App() {
     setError(null);
     try {
       const nextPayload = await apiClient.rollDice<ClassroomPayload>(session.token);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
     } catch (caughtError) {
       setError(getApiErrorMessage("掷骰子", caughtError));
     } finally {
@@ -892,7 +1181,7 @@ export function App() {
     setError(null);
     try {
       const nextPayload = await apiClient.submitDecision<ClassroomPayload>(session.token, input);
-      setPayload(nextPayload);
+      setPayload(localizePayload(nextPayload));
       setStudentRoundDetailPayload(null);
       setStudentView("dashboard");
     } catch (caughtError) {
@@ -925,7 +1214,7 @@ export function App() {
     setError(null);
     try {
       const nextHistory = await apiClient.getTeacherHistory<ClassroomPayload>(session.token);
-      setHistoryPayload(nextHistory);
+      setHistoryPayload(localizePayload(nextHistory));
       setTeacherView("archives");
     } catch (caughtError) {
       setError(getApiErrorMessage("加载教师历史", caughtError));
@@ -940,7 +1229,7 @@ export function App() {
     setError(null);
     try {
       const nextHistory = await apiClient.getTeacherHistory<ClassroomPayload>(session.token);
-      setHistoryPayload(nextHistory);
+      setHistoryPayload(localizePayload(nextHistory));
     } catch (caughtError) {
       setError(getApiErrorMessage("刷新教师历史", caughtError));
     } finally {
@@ -954,7 +1243,7 @@ export function App() {
     setError(null);
     try {
       const nextDetail = await apiClient.getTeacherRoundDetail<ClassroomPayload>(session.token, roundNo);
-      setRoundDetailPayload(nextDetail);
+      setRoundDetailPayload(localizePayload(nextDetail));
       setTeacherView("round");
     } catch (caughtError) {
       setError(getApiErrorMessage("加载回合详情", caughtError));
@@ -969,7 +1258,7 @@ export function App() {
     setError(null);
     try {
       const nextDetail = await apiClient.getStudentRoundDetail<ClassroomPayload>(session.token, roundNo);
-      setStudentRoundDetailPayload(nextDetail);
+      setStudentRoundDetailPayload(localizePayload(nextDetail));
       setStudentView("round");
     } catch (caughtError) {
       setError(getApiErrorMessage("加载学生回合复盘", caughtError));
@@ -985,7 +1274,7 @@ export function App() {
     setError(null);
     try {
       const nextScreen = await apiClient.getScreen<ClassroomPayload>({ roomCode });
-      setScreenPayload(nextScreen);
+      setScreenPayload(localizePayload(nextScreen));
       setTeacherView("screen");
     } catch (caughtError) {
       setError(getApiErrorMessage("打开大屏", caughtError));
@@ -999,7 +1288,7 @@ export function App() {
     if (!roomCode) return;
     try {
       const nextScreen = await apiClient.getScreen<ClassroomPayload>({ roomCode });
-      setScreenPayload(nextScreen);
+      setScreenPayload(localizePayload(nextScreen));
     } catch (caughtError) {
       setError(getApiErrorMessage("刷新大屏", caughtError));
     }

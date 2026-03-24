@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatRoundStatus } from "../lib/display";
 
 type TeacherDashboardPageProps = {
   loading: boolean;
@@ -166,7 +167,7 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
           <h2>{classroom?.name ?? "未命名课堂"}</h2>
           <p>
             {classroom?.code ?? "--"} | 第 {round?.no ?? "--"} 回合 / 共 {round?.total ?? "--"} 回合 / 状态{" "}
-            {round?.status ?? "--"}
+            {formatRoundStatus(round?.status)}
           </p>
         </div>
         <div className="action-row">

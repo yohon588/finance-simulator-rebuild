@@ -1,3 +1,5 @@
+import { formatFamilyStage } from "../lib/display";
+
 type StudentRoundDetailPageProps = {
   loading?: boolean;
   onBack: () => void;
@@ -170,7 +172,7 @@ export function StudentRoundDetailPage(props: StudentRoundDetailPageProps) {
               {detail.insuranceFlags?.accidentCover ? 1 : 0} / C {detail.insuranceFlags?.cyberCover ? 1 : 0}
             </p>
             <p>
-              家庭阶段 {detail.family?.stage ?? "single"} | 每轮支持 {detail.family?.monthlySupport ?? 0}
+              家庭阶段 {formatFamilyStage(detail.family?.stage)} | 每轮支持 {detail.family?.monthlySupport ?? 0}
             </p>
             <p>固定成本占比 {ledger.score?.fixedCostRatio ?? 0}</p>
           </article>
@@ -232,7 +234,7 @@ export function StudentRoundDetailPage(props: StudentRoundDetailPageProps) {
             <div className="student-list">
               <div className="student-row">
                 <strong>阶段</strong>
-                <span>{ledger.familyState?.stage ?? "single"}</span>
+                <span>{formatFamilyStage(ledger.familyState?.stage)}</span>
               </div>
               <div className="student-row">
                 <strong>每轮家庭支持</strong>

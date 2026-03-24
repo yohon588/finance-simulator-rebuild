@@ -1,3 +1,5 @@
+import { formatFamilyStage } from "../lib/display";
+
 type TeacherRoundDetailPageProps = {
   loading?: boolean;
   onBack: () => void;
@@ -155,7 +157,7 @@ export function TeacherRoundDetailPage(props: TeacherRoundDetailPageProps) {
                 </span>
                 <span>
                   保障：健康 {student.insuranceFlags?.healthCover ? 1 : 0} / 意外 {student.insuranceFlags?.accidentCover ? 1 : 0} /
-                  网络安全 {student.insuranceFlags?.cyberCover ? 1 : 0} | 家庭阶段 {student.family?.stage ?? "单身"} / 支持{" "}
+                  网络安全 {student.insuranceFlags?.cyberCover ? 1 : 0} | 家庭阶段 {formatFamilyStage(student.family?.stage)} / 支持{" "}
                   {student.family?.monthlySupport ?? 0}
                 </span>
                 <span>

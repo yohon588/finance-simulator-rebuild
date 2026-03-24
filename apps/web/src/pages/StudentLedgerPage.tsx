@@ -1,3 +1,5 @@
+import { formatFamilyStage } from "../lib/display";
+
 type StudentLedgerPageProps = {
   onBack: () => void;
   payload: {
@@ -82,14 +84,14 @@ export function StudentLedgerPage(props: StudentLedgerPageProps) {
   const ledger = props.payload.latestLedger;
   const highlightDrivers = ledger
     ? [
-        { label: "Living Cost", value: Math.abs(ledger.cashFlow.mandatoryLiving ?? 0) },
+        { label: "基础生活费", value: Math.abs(ledger.cashFlow.mandatoryLiving ?? 0) },
         {
-          label: "Debt Service",
+          label: "债务支出",
           value: Math.abs((ledger.cashFlow.minDebtPay ?? 0) + (ledger.cashFlow.loanInterest ?? 0))
         },
-        { label: "Optional Spend", value: Math.abs(ledger.cashFlow.consume ?? 0) },
-        { label: "Investment PnL", value: Math.abs(ledger.cashFlow.investmentPnl ?? 0) },
-        { label: "Dice Event", value: Math.abs(ledger.cashFlow.dice ?? 0) }
+        { label: "可选消费", value: Math.abs(ledger.cashFlow.consume ?? 0) },
+        { label: "投资盈亏", value: Math.abs(ledger.cashFlow.investmentPnl ?? 0) },
+        { label: "个人骰子事件", value: Math.abs(ledger.cashFlow.dice ?? 0) }
       ]
         .sort((left, right) => right.value - left.value)
         .slice(0, 3)
@@ -222,7 +224,7 @@ export function StudentLedgerPage(props: StudentLedgerPageProps) {
             <div className="student-list">
               <div className="student-row">
                 <strong>阶段</strong>
-                <span>{ledger.familyState?.stage ?? "single"}</span>
+                <span>{formatFamilyStage(ledger.familyState?.stage)}</span>
               </div>
               <div className="student-row">
                 <strong>每轮家庭支持</strong>

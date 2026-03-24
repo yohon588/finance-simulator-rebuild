@@ -1,3 +1,5 @@
+import { formatFamilyStage, formatRoundStatus } from "../lib/display";
+
 type StudentDashboardPageProps = {
   loading: boolean;
   onRefresh: () => void;
@@ -163,7 +165,7 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
         <article className="panel metric-card">
           <span>回合状态</span>
           <strong>
-            第 {payload.round.no} 回合 / 共 {payload.round.total ?? "--"} 回合 / {payload.round.status}
+            第 {payload.round.no} 回合 / 共 {payload.round.total ?? "--"} 回合 / {formatRoundStatus(payload.round.status)}
           </strong>
         </article>
         <article className="panel metric-card">
@@ -270,7 +272,7 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
         <div className="student-list">
           <div className="student-row">
             <strong>阶段</strong>
-            <span>{payload.student.family?.stage ?? "单身"}</span>
+            <span>{formatFamilyStage(payload.student.family?.stage)}</span>
           </div>
           <div className="student-row">
             <strong>每月家庭支出</strong>
