@@ -5,6 +5,7 @@ import type { SubmitDecisionInput } from "../api/client";
 type StudentDecisionPageProps = {
   loading: boolean;
   currentRoundId: string;
+  roundStatus: string;
   moduleConfig?: {
     opt?: {
       retirement?: boolean;
@@ -19,6 +20,7 @@ type StudentDecisionPageProps = {
 
 export function StudentDecisionPage(props: StudentDecisionPageProps) {
   const moduleOpt = props.moduleConfig?.opt;
+  const canSubmitDecision = props.roundStatus === "open";
   const showTax = moduleOpt?.tax !== false;
   const showRetirement = moduleOpt?.retirement !== false;
   const showLegacy = moduleOpt?.legacy !== false;
@@ -170,6 +172,10 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
   ]);
 
   async function handleSubmit() {
+    if (!canSubmitDecision) {
+      return;
+    }
+
     const consume = [];
     const invest = [];
     let gamble = null;
@@ -231,6 +237,7 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
     (Number(cryptoBuy) > 0 && !riskCrypto) ||
     (Number(optionBuy) > 0 && !riskOption) ||
     (Number(gambleAmount) > 0 && !riskGamble);
+  const submitBlocked = blockedByRiskAck || !canSubmitDecision;
 
   return (
     <section className="page-stack">
@@ -423,8 +430,14 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
         </label>
 
         {blockedByRiskAck ? <p className="form-error">高风险资产和赌博/诈骗操作必须先勾选风险确认。</p> : null}
+        {!canSubmitDecision ? <p className="form-error">当前回合未开放或已被教师锁定，暂时不能提交决策。</p> : null}
 
-        <button type="button" disabled={props.loading || blockedByRiskAck} onClick={handleSubmit}>
+        <button
+          type="button"
+          disabled={props.loading || submitBlocked}
+          onClick={handleSubmit}
+          title={!canSubmitDecision ? "只有在教师开放回合时，学生才能提交资产配置。" : undefined}
+        >
           {props.loading ? "提交中..." : "提交决策"}
         </button>
       </article>
