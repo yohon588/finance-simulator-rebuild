@@ -15,7 +15,7 @@ export function createInMemoryRepository(seed = {}) {
   });
 
   return {
-    saveRoom(room) {
+    saveRoom(room, _options = {}) {
       rooms.set(room.id, room);
       return room;
     },
@@ -74,8 +74,8 @@ export function createFileRepository(filePath) {
   }
 
   return {
-    saveRoom(room) {
-      const result = repository.saveRoom(room);
+    saveRoom(room, options = {}) {
+      const result = repository.saveRoom(room, options);
       persist();
       return result;
     },

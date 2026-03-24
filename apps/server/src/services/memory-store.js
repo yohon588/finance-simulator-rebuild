@@ -1503,7 +1503,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
     };
 
     const session = createSession("teacher", teacherUserId, room.id);
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: true, syncRound: true, syncArchives: true });
     await repository.saveSession(session);
 
     return buildTeacherPayload(room, session, moduleConfig);
@@ -1526,7 +1526,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
 
     const student = buildStudentState(displayName, roleId);
     room.students.push(student);
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: true, syncRound: false, syncArchives: false });
 
     const session = createSession("student", student.id, room.id);
     await repository.saveSession(session);
@@ -1570,7 +1570,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
 
     if (!room.teacherUserId) {
       room.teacherUserId = crypto.randomUUID();
-      await repository.saveRoom(room);
+      await repository.saveRoom(room, { syncStudents: true, syncRound: false, syncArchives: false });
     }
 
     const session = createSession("teacher", room.teacherUserId, room.id);
@@ -1602,7 +1602,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
     room.round.dice = {};
     room.round.lockedAt = null;
     room.round.settledAt = null;
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: false, syncRound: true, syncArchives: false });
 
     return buildTeacherPayload(room, session, moduleConfig);
   }
@@ -1623,7 +1623,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
 
     room.round.status = "locked";
     room.round.lockedAt = new Date().toISOString();
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: false, syncRound: true, syncArchives: false });
     return buildTeacherPayload(room, session, moduleConfig);
   }
 
@@ -1703,10 +1703,10 @@ export function createMemoryStore(moduleConfig, options = {}) {
       classProfile,
       teachingSummary
     });
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: true, syncRound: true, syncArchives: false });
 
     room.round = createNextRound(room.round);
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: false, syncRound: true, syncArchives: false });
     return buildTeacherPayload(room, session, moduleConfig);
   }
 
@@ -1731,7 +1731,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
     }
 
     buildDiceResult(student, room);
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: false, syncRound: true, syncArchives: false });
     return buildStudentPayload(room, session, moduleConfig);
   }
 
@@ -1766,7 +1766,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
       riskAck: sanitizedPayload.riskAck ?? [],
       submittedAt: new Date().toISOString()
     };
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: false, syncRound: true, syncArchives: false });
 
     return buildStudentPayload(room, session, moduleConfig);
   }
@@ -1784,7 +1784,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
     const archive = buildArchiveSnapshot(room);
     room.archives = [archive, ...room.archives];
     room.round.status = "archived";
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: false, syncRound: true, syncArchives: true });
     return buildTeacherPayload(room, session, moduleConfig);
   }
 
@@ -1820,7 +1820,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
       };
     });
 
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: true, syncRound: true, syncArchives: true });
     if (typeof repository.cleanupRoomStorage === "function") {
       await repository.cleanupRoomStorage(room.id, room.round.no);
     }
@@ -1882,7 +1882,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
       };
     });
 
-    await repository.saveRoom(room);
+    await repository.saveRoom(room, { syncStudents: true, syncRound: true, syncArchives: false });
     return buildTeacherPayload(room, session, moduleConfig);
   }
 

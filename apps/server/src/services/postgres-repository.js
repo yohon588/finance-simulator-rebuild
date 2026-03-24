@@ -454,31 +454,52 @@ export async function createPostgresRepository(connectionString) {
   }
 
   return {
-    async saveRoom(room) {
-      await client.query(
-        `insert into classrooms (id, code, name, teacher_name, status)
-         values ($1, $2, $3, $4, $5)
-         on conflict (id)
-         do update set
-           code = excluded.code,
-           name = excluded.name,
-           teacher_name = excluded.teacher_name,
-           status = excluded.status`,
-        [room.id, room.code, room.name, room.teacherName, room.round?.status ?? room.status ?? "draft"]
-      );
-      await client.query(
-        `insert into classroom_runtime_snapshots (classroom_id, payload_json, updated_at)
-         values ($1, $2::jsonb, now())
-         on conflict (classroom_id)
-         do update set
-           payload_json = excluded.payload_json,
-           updated_at = now()`,
-        [room.id, JSON.stringify(room)]
-      );
-      await syncNormalizedStudentTables(room);
-      await syncRoundRuntimeTables(room);
-      await syncArchiveTables(room);
-      return room;
+    async saveRoom(room, options = {}) {
+      const {
+        syncStudents = true,
+        syncRound = true,
+        syncArchives = true
+      } = options;
+
+      try {
+        await client.query("begin");
+        await client.query(
+          `insert into classrooms (id, code, name, teacher_name, status)
+           values ($1, $2, $3, $4, $5)
+           on conflict (id)
+           do update set
+             code = excluded.code,
+             name = excluded.name,
+             teacher_name = excluded.teacher_name,
+             status = excluded.status`,
+          [room.id, room.code, room.name, room.teacherName, room.round?.status ?? room.status ?? "draft"]
+        );
+        await client.query(
+          `insert into classroom_runtime_snapshots (classroom_id, payload_json, updated_at)
+           values ($1, $2::jsonb, now())
+           on conflict (classroom_id)
+           do update set
+             payload_json = excluded.payload_json,
+             updated_at = now()`,
+          [room.id, JSON.stringify(room)]
+        );
+
+        if (syncStudents) {
+          await syncNormalizedStudentTables(room);
+        }
+        if (syncRound) {
+          await syncRoundRuntimeTables(room);
+        }
+        if (syncArchives) {
+          await syncArchiveTables(room);
+        }
+
+        await client.query("commit");
+        return room;
+      } catch (error) {
+        await client.query("rollback");
+        throw error;
+      }
     },
     async getRoom(roomId) {
       return queryRoomById(roomId);
