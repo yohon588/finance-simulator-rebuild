@@ -159,6 +159,10 @@ function percent(value?: number) {
   return `${(Number(value ?? 0) * 100).toFixed(1)}%`;
 }
 
+function operationMetric(value?: number | null) {
+  return value == null ? "—" : currency(value);
+}
+
 function clampScore(value: number) {
   return Math.max(0, Number(value.toFixed(1)));
 }
@@ -320,6 +324,11 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
     totalNecessarySpend > 0
       ? `当前按可动用现金 ÷ 每轮必要支出计算，约可覆盖 ${freedomRatio.toFixed(1)}% 的固定开销。`
       : "当前没有识别到必要支出，财富自由度暂按 0 处理。";
+
+  const operationAvailableCash = draftPreview ? draftPreview.availableCash : null;
+  const operationConsume = draftPreview ? draftPreview.plannedConsume : null;
+  const operationInvest = draftPreview ? draftPreview.plannedInvest : null;
+  const operationBorrow = draftPreview ? draftPreview.totalBorrow : null;
 
   const pieSlices = useMemo<PieSlice[]>(() => {
     const entries = draftPreview?.assetDistribution?.length
@@ -607,21 +616,22 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
             <div className="metric-grid dense">
               <article className="metric-card compact">
                 <span>可支配金额</span>
-                <strong>{currency(draftPreview?.availableCash ?? 0)}</strong>
+                <strong>{operationMetric(operationAvailableCash)}</strong>
               </article>
               <article className="metric-card compact">
                 <span>生活消费</span>
-                <strong>{currency(draftPreview?.plannedConsume ?? 0)}</strong>
+                <strong>{operationMetric(operationConsume)}</strong>
               </article>
               <article className="metric-card compact">
                 <span>金融资产</span>
-                <strong>{currency(draftPreview?.plannedInvest ?? 0)}</strong>
+                <strong>{operationMetric(operationInvest)}</strong>
               </article>
               <article className="metric-card compact">
                 <span>新增借款</span>
-                <strong>{currency(draftPreview?.totalBorrow ?? 0)}</strong>
+                <strong>{operationMetric(operationBorrow)}</strong>
               </article>
             </div>
+            {!draftPreview ? <p className="muted-text top-gap">还没有生成本轮草稿预览，进入资金配置后这里会更新本轮操作数据。</p> : null}
           </article>
 
           <article className="panel page-panel">

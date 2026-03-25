@@ -73,6 +73,7 @@ export type DecisionStudentSnapshot = {
 export type DecisionPreview = {
   availableCash: number;
   plannedConsume: number;
+  plannedLifecycleSetup: number;
   plannedInvest: number;
   plannedRisk: number;
   plannedFixedCost: number;
@@ -253,11 +254,19 @@ export function buildDecisionPreview({
   const riskAmount = toNumber(draft.gambleAmount);
   const explicitBorrow = toNumber(draft.borrow);
   const repayAmount = Math.max(0, toNumber(draft.repay));
-  const plannedConsume = roundCurrency(
+  const selectedConsume = roundCurrency(
     consumeRows.reduce((sum, item) => sum + item.amount, 0) +
       (draft.buyVehicle ? vehicleConfig.downPayment : 0) +
       (draft.buyHouse ? houseConfig.downPayment : 0)
   );
+  const currentFamilyStage = student.family?.stage ?? "single";
+  const plannedLifecycleSetup = roundCurrency(
+    (draft.engagementPrep && currentFamilyStage === "single" ? familyConfig.engagementCost : 0) +
+      (draft.weddingPlan && currentFamilyStage !== "married"
+        ? familyConfig.weddingCost + (currentFamilyStage === "single" ? familyConfig.engagementCost : 0)
+        : 0)
+  );
+  const plannedConsume = roundCurrency(selectedConsume + plannedLifecycleSetup);
   const plannedInvest = roundCurrency(investRows.reduce((sum, item) => sum + item.amount, 0));
   const plannedRisk = roundCurrency(riskAmount);
   const availableCash = roundCurrency(student.cash + budget.salary - budget.mandatoryLiving - budget.minDebtPay);
@@ -404,6 +413,7 @@ export function buildDecisionPreview({
   return {
     availableCash,
     plannedConsume,
+    plannedLifecycleSetup,
     plannedInvest,
     plannedRisk,
     plannedFixedCost,
