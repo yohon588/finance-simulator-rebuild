@@ -310,7 +310,9 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
         settledScore?.healthScore ??
           calcHealthScore(payload.student.metrics.debtRatio, payload.student.metrics.dsr, displayEmergencyMonths)
       );
-  const displayLifeScore = draftPreview ? calcLifeScore(draftPreview.plannedConsume ?? 0) : Number(settledScore?.lifeScore ?? 0);
+  const displayLifeScore = draftPreview
+    ? Number(draftPreview.projectedLifeScore ?? 0)
+    : Number(settledScore?.lifeScore ?? 0);
   const displayFinalScore = draftPreview
     ? clampScore(displayWealthScore * 0.6 + displayHealthScore * 0.3 + displayLifeScore * 0.1)
     : Number(settledScore?.finalScore ?? payload.student.metrics.finalScore ?? 0);
