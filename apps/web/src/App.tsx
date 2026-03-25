@@ -16,9 +16,12 @@ import {
   formatDiceCategory,
   formatDriverLabel,
   formatFamilyStage,
+  formatModifierLabel,
   formatRiskTag,
   formatRoleLabel,
   formatRoundStatus,
+  formatSettlementSummary,
+  formatTeacherCue,
   localizeDiceCard,
   localizeMacroEvent
 } from "./lib/display";
@@ -75,6 +78,7 @@ type ClassroomPayload = {
     id: string;
     no: number;
     status: string;
+    teachingTopic?: string | null;
     eventId: number | null;
     costIndex: number;
     total?: number;
@@ -694,7 +698,7 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
       ? {
           ...nextPayload.latestLedger,
           riskTags: nextPayload.latestLedger.riskTags.map((tag) => formatRiskTag(tag)),
-          settlementSummary: nextPayload.latestLedger.settlementSummary.map((item) => formatDriverLabel(item)),
+          settlementSummary: nextPayload.latestLedger.settlementSummary.map((item) => formatSettlementSummary(item)),
           familyState: nextPayload.latestLedger.familyState
             ? {
                 ...nextPayload.latestLedger.familyState,
@@ -717,6 +721,7 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
           diceEvent: nextPayload.latestLedger.diceEvent
             ? {
                 ...nextPayload.latestLedger.diceEvent,
+                modifiers: nextPayload.latestLedger.diceEvent.modifiers?.map((item) => formatModifierLabel(item)),
                 ...localizeDiceCard({
                   id: nextPayload.latestLedger.diceEvent.cardId ?? undefined,
                   title: nextPayload.latestLedger.diceEvent.title,
@@ -762,6 +767,7 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
                   ...entry,
                   category: formatDiceCategory(entry.category)
                 })),
+                teacherCue: formatTeacherCue(nextPayload.roundDetail.teachingSummary.teacherCue),
                 topRiskTags: nextPayload.roundDetail.teachingSummary.topRiskTags?.map((entry) => ({
                   ...entry,
                   tag: formatRiskTag(entry.tag)
@@ -782,6 +788,7 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
               ? {
                   ...student.diceEvent,
                   category: formatDiceCategory(student.diceEvent.category),
+                  modifiers: student.diceEvent.modifiers?.map((item) => formatModifierLabel(item)),
                   ...localizeDiceCard({
                     title: student.diceEvent.title,
                     knowledgePoint: student.diceEvent.knowledgePoint,
@@ -803,7 +810,8 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
             topDrivers: student.topDrivers?.map((item) => ({
               ...item,
               label: formatDriverLabel(item.label)
-            }))
+            })),
+            settlementSummary: student.settlementSummary?.map((item) => formatSettlementSummary(item))
           }))
         }
       : nextPayload.roundDetail,
@@ -829,7 +837,7 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
             ? {
                 ...nextPayload.studentRoundDetail.ledger,
                 settlementSummary: nextPayload.studentRoundDetail.ledger.settlementSummary?.map((item) =>
-                  formatDriverLabel(item)
+                  formatSettlementSummary(item)
                 ),
                 familyState: nextPayload.studentRoundDetail.ledger.familyState
                   ? {
@@ -852,6 +860,9 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
                 diceEvent: nextPayload.studentRoundDetail.ledger.diceEvent
                   ? {
                       ...nextPayload.studentRoundDetail.ledger.diceEvent,
+                      modifiers: nextPayload.studentRoundDetail.ledger.diceEvent.modifiers?.map((item) =>
+                        formatModifierLabel(item)
+                      ),
                       ...localizeDiceCard({
                         title: nextPayload.studentRoundDetail.ledger.diceEvent.title,
                         knowledgePoint: nextPayload.studentRoundDetail.ledger.diceEvent.knowledgePoint,
@@ -879,6 +890,8 @@ function localizePayload(nextPayload: ClassroomPayload): ClassroomPayload {
             ...item,
             category: formatDiceCategory(item.category)
           })),
+          teacherCue: formatTeacherCue(nextPayload.currentRoundSummary.teacherCue),
+          lifecycleCue: formatTeacherCue(nextPayload.currentRoundSummary.lifecycleCue),
           topRiskTags: nextPayload.currentRoundSummary.topRiskTags?.map((item) => ({
             ...item,
             tag: formatRiskTag(item.tag)
@@ -1217,6 +1230,20 @@ export function App() {
     }
   }
 
+  async function handleSetTeachingTopic(teachingTopic: string | null) {
+    if (!session) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const nextPayload = await apiClient.setTeachingTopic<ClassroomPayload>(session.token, { teachingTopic });
+      setPayload(localizePayload(nextPayload));
+    } catch (caughtError) {
+      setError(getApiErrorMessage("设置教学课题", caughtError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleLockRound() {
     if (!session) return;
     setLoading(true);
@@ -1406,6 +1433,8 @@ export function App() {
             loading={loading}
             currentRoundId={payload.round.id}
             roundStatus={payload.round.status}
+            budget={payload.budget ?? null}
+            student={payload.student}
             moduleConfig={payload.moduleConfig}
             onBack={() => setStudentView("dashboard")}
             onSubmitDecision={handleSubmitDecision}
@@ -1452,6 +1481,7 @@ export function App() {
           loading={loading}
           onLogout={handleLogout}
           onOpenRound={handleOpenRound}
+          onSetTeachingTopic={handleSetTeachingTopic}
           onLockRound={handleLockRound}
           onSettleRound={handleSettleRound}
           onArchive={handleArchiveRoom}

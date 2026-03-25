@@ -232,3 +232,105 @@ export function localizeDiceCard(
     teacherNote: localized.teacherNote
   };
 }
+
+const assetLabels: Record<string, string> = {
+  A1: "银行存款",
+  A2: "银行理财",
+  A3: "货币基金",
+  A4: "债券基金",
+  A5: "股票基金",
+  A6: "股票",
+  A7: "虚拟币",
+  A8: "期权",
+  A9: "高风险投机",
+  cash: "现金",
+  vehicle: "车辆",
+  house: "房产"
+};
+
+const cashFlowLabels: Record<string, string> = {
+  salary: "工资入账",
+  consume: "消费支出",
+  investmentPnl: "投资盈亏",
+  dice: "个人事件影响",
+  fees: "交易手续费",
+  repay: "主动还款",
+  borrow: "主动借款",
+  bridgeDebt: "自动垫付借款",
+  bridgeShortfall: "现金缺口垫付",
+  minDebtPay: "最低还款",
+  loanInterest: "贷款利息",
+  gamblePnl: "高风险结果",
+  vehicleDownPayment: "购车首付",
+  vehicleCarryCost: "车辆固定成本",
+  houseDownPayment: "购房首付",
+  houseCarryCost: "房产固定成本",
+  familySetupCost: "关系阶段一次性支出",
+  familyCarryCost: "家庭长期支出"
+};
+
+const modifierLabels: Record<string, string> = {
+  "Owning a home reduced rent-style housing shocks, although maintenance pressure remains.":
+    "已持有房产，住房类冲击有所缓和，但房屋维护压力仍在。",
+  "Recent learning investment improved the payoff from the income opportunity.":
+    "近期学习投入提升了这次收入机会的回报。",
+  "Device maintenance preparation reduced the cost of the equipment shock.":
+    "提前做了设备维护准备，降低了设备故障冲击。",
+  "Owning a vehicle increased exposure to transport fines and related friction costs.":
+    "持有车辆提高了交通罚款和通勤摩擦成本。",
+  "Vehicle ownership plus renting tightened the housing shock because fixed costs were already high.":
+    "已有车辆且仍在租房，固定成本偏高，住房冲击更明显。",
+  "Low emergency buffer leaves little protection against medical costs.": "应急金偏低，面对医疗支出时缓冲不足。"
+};
+
+export function formatAssetLabel(assetId?: string) {
+  return assetLabels[assetId ?? ""] ?? assetId ?? "--";
+}
+
+export function formatCashFlowLabel(key?: string) {
+  return cashFlowLabels[key ?? ""] ?? key ?? "--";
+}
+
+export function formatModifierLabel(value?: string) {
+  return modifierLabels[value ?? ""] ?? value ?? "--";
+}
+
+export function formatTeacherCue(value?: string) {
+  if (!value) {
+    return value ?? "--";
+  }
+
+  return value
+    .replace("Lead with ", "教师讲解先抓住：")
+    .replace("preparedness softened more shocks than it amplified, but watch ", "本轮准备动作对冲了更多冲击，但要重点提醒：")
+    .replace("stress amplifiers outweighed protection this round, especially around ", "本轮放大因素多于保护因素，尤其要提醒：")
+    .replace("Fixed commitments started to dominate outcomes; compare students with similar income but very different locked costs.", "固定成本开始主导结果，建议对比收入接近但固定支出差异很大的学生。")
+    .replace("Asset ownership is beginning to reshape cashflow; emphasize how carrying costs change resilience before returns appear.", "资产持有开始重塑现金流，建议强调：收益还没兑现前，持有成本已经先影响抗风险能力。")
+    .replace("Family lifecycle choices are now visible; discuss how relationship milestones turn into recurring cash obligations.", "家庭生命周期选择开始显现，建议讲清楚关系阶段如何转化为持续现金流责任。")
+    .replace("Lifecycle load stayed light; the round was driven more by decisions and shocks than by fixed commitments.", "本轮生命周期负担较轻，结果更多由消费、投资与事件冲击决定。");
+}
+
+export function formatSettlementSummary(value?: string) {
+  if (!value) {
+    return value ?? "--";
+  }
+
+  return value
+    .replace(/^Budget pressure came from living cost (.+) and debt pay (.+)\.$/, "本轮预算压力主要来自：基础生活费 $1，最低还款 $2。")
+    .replace(/^Fixed cost ratio ended at (.+)\.$/, "本轮固定成本占收入比为 $1。")
+    .replace(/^Vehicle cash lock this round was down payment (.+) and carrying cost (.+)\.$/, "车辆本轮锁定现金流：首付 $1，持续成本 $2。")
+    .replace(/^No vehicle carrying cost applied this round\.$/, "本轮没有新增车辆固定成本。")
+    .replace(/^Housing cash lock this round was down payment (.+) and carrying cost (.+)\.$/, "房产本轮锁定现金流：首付 $1，持续成本 $2。")
+    .replace(/^No housing carrying cost applied this round\.$/, "本轮没有新增房产固定成本。")
+    .replace(/^Family lifecycle cash cost was setup (.+) and monthly support (.+)\.$/, "家庭阶段带来的现金支出：一次性支出 $1，每轮家庭支持 $2。")
+    .replace(/^Family lifecycle cash cost was engagement setup (.+); no monthly family support yet\.$/, "当前进入订婚阶段：一次性准备支出 $1，尚未形成每轮家庭支持。")
+    .replace(/^No family lifecycle cash cost applied this round\.$/, "本轮没有新增家庭生命周期支出。")
+    .replace(/^Personal event: (.+)\.$/, "本轮个人事件：$1。")
+    .replace(/^Cash ended below zero, so (.+) increased by (.+)\.$/, "本轮现金跌破 0，因此自动垫付债务“$1”新增 $2。")
+    .replace(/^Cash stayed above zero, so no emergency bridge debt was triggered\.$/, "本轮现金未跌破 0，没有触发自动垫付借款。")
+    .replace(/^Gamble outcome: (.+) ended with (.+) and pnl (.+)\.$/, "高风险结果：$1，结果为 $2，盈亏 $3。")
+    .replace(/^No gambling position was taken this round\.$/, "本轮没有进行高风险投机。")
+    .replace(/^At least one debt reached DEFAULT because minimum payment was missed repeatedly\.$/, "至少有一笔债务因为连续未达最低还款，进入违约状态。")
+    .replace(/^A debt became DELINQUENT because this round payment did not cover the minimum requirement\.$/, "有债务因本轮未覆盖最低还款，进入逾期状态。")
+    .replace(/^All active debts met the current minimum payment threshold\.$/, "所有活跃债务都满足了本轮最低还款要求。");
+}

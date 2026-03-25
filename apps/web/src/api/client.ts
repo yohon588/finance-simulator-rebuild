@@ -24,6 +24,10 @@ export type OpenRoundInput = {
   eventId: number;
 };
 
+export type SetTeachingTopicInput = {
+  teachingTopic: string | null;
+};
+
 export type SubmitDecisionInput = {
   idempotencyKey: string;
   consume: Array<{ id: string; amount: number }>;
@@ -133,6 +137,16 @@ export const apiClient = {
   },
   openRound<T>(token: string, input: OpenRoundInput) {
     return requestJson<T>("/api/teacher/open-round", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(input)
+    });
+  },
+  setTeachingTopic<T>(token: string, input: SetTeachingTopicInput) {
+    return requestJson<T>("/api/teacher/teaching-topic", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

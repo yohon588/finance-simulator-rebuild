@@ -1,10 +1,23 @@
 import { useEffect, useState } from "react";
-import { formatRoundStatus } from "../lib/display";
+
+import {
+  formatDiceCategory,
+  formatDriverLabel,
+  formatRiskTag,
+  formatRoleLabel,
+  formatRoundStatus
+} from "../lib/display";
+import {
+  buildTeacherBriefing,
+  teachingTopicOptions,
+  type TeachingTopic
+} from "../lib/teaching-rules";
 
 type TeacherDashboardPageProps = {
   loading: boolean;
   onLogout: () => void;
   onOpenRound: (eventId: number) => Promise<void>;
+  onSetTeachingTopic: (teachingTopic: string | null) => Promise<void>;
   onLockRound: () => Promise<void>;
   onSettleRound: () => Promise<void>;
   onArchive: () => Promise<void>;
@@ -25,6 +38,7 @@ type TeacherDashboardPageProps = {
     round: {
       no: number;
       status: string;
+      teachingTopic?: string | null;
       total?: number;
     };
     moduleConfig?: {
@@ -156,6 +170,7 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
   const canResetRoom = round?.status !== "open" && round?.status !== "locked";
   const canArchiveRoom = round?.status === "settled" || round?.status === "finished";
   const [selectedEventId, setSelectedEventId] = useState(eventOptions[0]?.eventId ?? 1);
+  const preferredTopic = (round?.teachingTopic as TeachingTopic | null | undefined) ?? null;
 
   useEffect(() => {
     const currentEventId = props.payload?.currentEvent?.eventId;
@@ -174,6 +189,17 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
   }, [props.payload?.currentEvent?.eventId, eventOptions]);
 
   const selectedEvent = eventOptions.find((event) => event.eventId === selectedEventId) ?? eventOptions[0] ?? null;
+  const teacherBriefing = buildTeacherBriefing({
+    classroom,
+    round,
+    classProfile,
+    currentRoundSummary,
+    submissionSummary,
+    students,
+    ranking
+  }, {
+    preferredTopic
+  });
 
   return (
     <section className="page-stack">
@@ -214,7 +240,7 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
             </div>
             <div className="teacher-control-grid">
               <label className="inline-field">
-                <span>发布开始事件</span>
+                <span>发布起始事件</span>
                 <select
                   value={selectedEventId}
                   onChange={(event) => setSelectedEventId(Number(event.target.value))}
@@ -285,9 +311,9 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
             <div className="section-head">
               <div>
                 <p className="eyebrow">班级画像</p>
-                <h3>老师讲解重点</h3>
+                <h3>课堂复盘的核心数据</h3>
               </div>
-              <span className="info-tag">课堂复盘核心</span>
+              <span className="info-tag">给教师先看全班轮廓</span>
             </div>
             <div className="metric-grid dense">
               <article className="metric-card compact">
@@ -348,7 +374,7 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
                 <p>储备 {classProfile?.preparedness?.reserveReady ?? 0}</p>
                 <p>安全 {classProfile?.preparedness?.safetyReady ?? 0}</p>
                 {showTax ? <p>税务 {classProfile?.preparedness?.taxReady ?? 0}</p> : null}
-                {showRetirement ? <p>退休 {classProfile?.preparedness?.retirementReady ?? 0}</p> : null}
+                {showRetirement ? <p>养老 {classProfile?.preparedness?.retirementReady ?? 0}</p> : null}
                 {showLegacy ? <p>家庭支持 {classProfile?.preparedness?.legacyReady ?? 0}</p> : null}
               </div>
               <div className="compact-panel">
@@ -358,9 +384,9 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
                 <p>网络安全保障 {classProfile?.insuranceCoverage?.cyberCover ?? 0}</p>
               </div>
               <div className="compact-panel">
-                <strong>风险原因 TOP3</strong>
+                <strong>高频风险 TOP3</strong>
                 {(classProfile?.topRiskTags ?? []).length ? (
-                  classProfile?.topRiskTags.map((tag) => <p key={tag.tag}>{tag.tag} / {tag.hits}</p>)
+                  (classProfile?.topRiskTags ?? []).map((tag) => <p key={tag.tag}>{formatRiskTag(tag.tag)} / {tag.hits}</p>)
                 ) : (
                   <p>暂无高频风险标签</p>
                 )}
@@ -371,8 +397,8 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
           <article className="panel page-panel">
             <div className="section-head">
               <div>
-                <p className="eyebrow">学生进度与风险标签</p>
-                <h3>谁已提交，谁最需要被点名讲解</h3>
+                <p className="eyebrow">学生进度</p>
+                <h3>谁已提交，谁更适合被点名讨论</h3>
               </div>
             </div>
             {students.length === 0 ? (
@@ -387,7 +413,7 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
                 {students.map((student) => (
                   <div key={student.id} className="table-grid-row">
                     <span>{student.displayName}</span>
-                    <span>{student.roleId}</span>
+                    <span>{formatRoleLabel(student.roleId)}</span>
                     <span>{student.submitted ? "已提交" : "待提交"}</span>
                   </div>
                 ))}
@@ -401,20 +427,103 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
             <div className="section-head">
               <div>
                 <p className="eyebrow">教师讲解重点</p>
-                <h3>{currentRoundSummary?.teacherCue ?? "本轮完成结算后，这里会生成教师讲解提示。"}</h3>
+                <h3>{teacherBriefing.headline}</h3>
+              </div>
+              <span className="info-tag">{teacherBriefing.priority === "high" ? "优先讲解" : "建议讲解"}</span>
+            </div>
+            <label className="inline-field">
+              <span>本轮教学课题</span>
+              <select
+                value={preferredTopic ?? "auto"}
+                onChange={(event) =>
+                  props.onSetTeachingTopic(event.target.value === "auto" ? null : (event.target.value as TeachingTopic))
+                }
+                disabled={props.loading}
+              >
+                <option value="auto">自动判断最适合讲的课题</option>
+                {teachingTopicOptions.map((topic) => (
+                  <option key={topic.value} value={topic.value}>
+                    {topic.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="muted-text">当前课题：{teacherBriefing.topicLabel}</p>
+            <p>{teacherBriefing.summary}</p>
+            <div className="tag-row">
+              {teacherBriefing.topicTags.map((tag) => (
+                <span key={tag} className="info-tag">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <div className="three-col-grid top-gap">
+              <div className="compact-panel">
+                <strong>课堂目标</strong>
+                <p>{teacherBriefing.lessonGoal}</p>
+              </div>
+              <div className="compact-panel">
+                <strong>推荐回合</strong>
+                {teacherBriefing.recommendedRounds.map((roundLabel) => (
+                  <p key={roundLabel}>{roundLabel}</p>
+                ))}
+              </div>
+              <div className="compact-panel">
+                <strong>教师聚焦</strong>
+                {teacherBriefing.teacherFocus.map((focus) => (
+                  <p key={focus}>{focus}</p>
+                ))}
               </div>
             </div>
+            <div className="compact-panel top-gap">
+              <strong>推荐搭配宏观事件</strong>
+              {teacherBriefing.recommendedMacroEvents.map((eventLabel) => (
+                <p key={eventLabel}>{eventLabel}</p>
+              ))}
+            </div>
             <div className="student-list">
+              {teacherBriefing.evidence.map((item) => (
+                <div key={item.label} className="student-row">
+                  <strong>{item.label}</strong>
+                  <span>{item.value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="three-col-grid top-gap">
+              <div className="compact-panel">
+                <strong>建议对比</strong>
+                {teacherBriefing.compareSuggestions.map((suggestion) => (
+                  <p key={suggestion}>{suggestion}</p>
+                ))}
+              </div>
+              <div className="compact-panel">
+                <strong>课堂追问</strong>
+                {teacherBriefing.teacherQuestions.map((question) => (
+                  <p key={question}>{question}</p>
+                ))}
+              </div>
+              <div className="compact-panel">
+                <strong>课后提醒</strong>
+                {teacherBriefing.followUpActions.map((action) => (
+                  <p key={action}>{action}</p>
+                ))}
+              </div>
+            </div>
+            <div className="student-list top-gap">
               <div className="student-row">
                 <strong>主要驱动</strong>
                 <span>
-                  {(currentRoundSummary?.topDrivers ?? []).map((item) => `${item.label} ${item.total}`).join(" / ") || "等待结算"}
+                  {(currentRoundSummary?.topDrivers ?? [])
+                    .map((item) => `${formatDriverLabel(item.label)} ${item.total}`)
+                    .join(" / ") || "等待结算"}
                 </span>
               </div>
               <div className="student-row">
                 <strong>骰子事件分布</strong>
                 <span>
-                  {(currentRoundSummary?.diceCategories ?? []).map((item) => `${item.category} x${item.count}`).join(" / ") || "等待结算"}
+                  {(currentRoundSummary?.diceCategories ?? [])
+                    .map((item) => `${formatDiceCategory(item.category)} x${item.count}`)
+                    .join(" / ") || "等待结算"}
                 </span>
               </div>
               <div className="student-row">
@@ -431,6 +540,7 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
                 </div>
               ) : null}
             </div>
+            {currentRoundSummary?.teacherCue ? <p className="top-gap muted-text">系统原始提示：{currentRoundSummary.teacherCue}</p> : null}
           </article>
 
           <article className="panel page-panel">
@@ -447,10 +557,14 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
                 {ranking.slice(0, 5).map((row) => (
                   <div key={`${row.rank}-${row.displayName}`} className="student-row">
                     <div>
-                      <strong>#{row.rank} {row.displayName}</strong>
-                      <div>{row.roleId}</div>
+                      <strong>
+                        #{row.rank} {row.displayName}
+                      </strong>
+                      <div>{formatRoleLabel(row.roleId)}</div>
                     </div>
-                    <span>分数 {Number(row.finalScore).toFixed(1)} / 净资产 {currency(row.netWorth)}</span>
+                    <span>
+                      分数 {Number(row.finalScore).toFixed(1)} / 净资产 {currency(row.netWorth)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -479,7 +593,12 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
                         <strong>第 {item.roundNo} 回合</strong>
                         <div>{item.eventTitle ?? "宏观事件"}</div>
                       </div>
-                      <button type="button" className="ghost-button" onClick={() => props.onOpenRoundDetail(item.roundNo)} disabled={props.loading}>
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        onClick={() => props.onOpenRoundDetail(item.roundNo)}
+                        disabled={props.loading}
+                      >
                         打开详情
                       </button>
                     </div>
@@ -495,7 +614,7 @@ export function TeacherDashboardPage(props: TeacherDashboardPageProps) {
                 <h3>归档后保留，不会被重置清空</h3>
               </div>
             </div>
-            {!archives.length ? <p>暂无已归档课堂。</p> : <p>当前已有 {archives.length} 个归档快照，可在“查看归档”里详细复盘。</p>}
+            {!archives.length ? <p>暂无已归档课堂。</p> : <p>当前已有 {archives.length} 个归档快照，可在“查看归档”里继续复盘。</p>}
           </article>
         </aside>
       </section>
