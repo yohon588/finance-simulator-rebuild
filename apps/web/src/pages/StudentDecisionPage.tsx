@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { SubmitDecisionInput } from "../api/client";
 import {
   buildDecisionPreview,
-  clearDecisionDraft,
   readDecisionDraft,
   writeDecisionDraft,
   type DecisionBudget,
@@ -203,8 +202,10 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
       ]
     });
 
-    clearDecisionDraft(props.currentRoundId);
-    setDraft(defaultDraft(props.currentRoundId));
+    setDraft((current) => ({
+      ...current,
+      submissionKey: createSubmissionKey(props.currentRoundId)
+    }));
   }
 
   return (

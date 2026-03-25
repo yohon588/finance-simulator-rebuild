@@ -70,6 +70,12 @@ type StudentDashboardPageProps = {
     } | null;
     latestLedger?: {
       roundNo: number;
+      score?: {
+        finalScore?: number;
+        wealthScore?: number;
+        healthScore?: number;
+        lifeScore?: number;
+      };
     } | null;
     student: {
       displayName: string;
@@ -272,10 +278,10 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
     });
   }, [payload.round.id, payload.budget, payload.student]);
 
+  const settledScore = payload.latestLedger?.score;
   const displayNetWorth = draftPreview?.projectedNetWorth ?? payload.student.metrics.netWorth;
   const displayCash = draftPreview?.projectedCash ?? payload.student.cash;
   const displayEmergencyMonths = draftPreview?.projectedEmergencyMonths ?? payload.student.metrics.emergencyMonths;
-  const displayScore = draftPreview?.projectedLifeScore ?? Number(payload.student.metrics.finalScore ?? 0);
   const displayVehicle = draftPreview?.projectedVehicle ?? payload.student.vehicle;
   const displayHouse = draftPreview?.projectedHouse ?? payload.student.house;
   const displayFamily = draftPreview?.projectedFamily ?? payload.student.family;
@@ -295,14 +301,19 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
     (displayBudget?.housingMandatory ?? 0) +
     (displayBudget?.familyMandatory ?? 0);
   const freedomRatio = totalNecessarySpend > 0 ? Math.max(0, (displayCash / totalNecessarySpend) * 100) : 0;
-  const displayWealthScore = calcWealthScore(displayNetWorth, payload.student.baseSalary);
-  const displayHealthScore = calcHealthScore(
-    payload.student.metrics.debtRatio,
-    payload.student.metrics.dsr,
-    displayEmergencyMonths
-  );
-  const displayLifeScore = calcLifeScore(draftPreview?.plannedConsume ?? 0);
-  const displayFinalScore = clampScore(displayWealthScore * 0.6 + displayHealthScore * 0.3 + displayLifeScore * 0.1);
+  const displayWealthScore = draftPreview
+    ? calcWealthScore(displayNetWorth, payload.student.baseSalary)
+    : Number(settledScore?.wealthScore ?? calcWealthScore(displayNetWorth, payload.student.baseSalary));
+  const displayHealthScore = draftPreview
+    ? calcHealthScore(payload.student.metrics.debtRatio, payload.student.metrics.dsr, displayEmergencyMonths)
+    : Number(
+        settledScore?.healthScore ??
+          calcHealthScore(payload.student.metrics.debtRatio, payload.student.metrics.dsr, displayEmergencyMonths)
+      );
+  const displayLifeScore = draftPreview ? calcLifeScore(draftPreview.plannedConsume ?? 0) : Number(settledScore?.lifeScore ?? 0);
+  const displayFinalScore = draftPreview
+    ? clampScore(displayWealthScore * 0.6 + displayHealthScore * 0.3 + displayLifeScore * 0.1)
+    : Number(settledScore?.finalScore ?? payload.student.metrics.finalScore ?? 0);
   const freedomSummary =
     totalNecessarySpend > 0
       ? `当前按可动用现金 ÷ 每轮必要支出计算，约可覆盖 ${freedomRatio.toFixed(1)}% 的固定开销。`
@@ -425,7 +436,7 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
               </article>
               <article className="metric-card compact">
                 <span>综合得分</span>
-                <strong>{(draftPreview ? displayFinalScore : displayScore).toFixed(1)}</strong>
+                  <strong>{displayFinalScore.toFixed(1)}</strong>
               </article>
               <article className="metric-card compact">
                 <span>财富自由度</span>
