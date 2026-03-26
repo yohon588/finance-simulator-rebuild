@@ -1,11 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { SubmitDecisionInput } from "../api/client";
+import {
+  buildDecisionPreview,
+  readDecisionDraft,
+  writeDecisionDraft,
+  type DecisionBudget,
+  type DecisionDraft,
+  type DecisionStudentSnapshot
+} from "../lib/decision-preview";
 
 type StudentDecisionPageProps = {
   loading: boolean;
   currentRoundId: string;
   roundStatus: string;
+  budget: DecisionBudget | null;
+  student: DecisionStudentSnapshot;
   moduleConfig?: {
     opt?: {
       retirement?: boolean;
@@ -18,6 +28,83 @@ type StudentDecisionPageProps = {
   onSubmitDecision: (input: SubmitDecisionInput) => Promise<void>;
 };
 
+function createSubmissionKey(roundId: string) {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return `${roundId}-${globalThis.crypto.randomUUID()}`;
+  }
+
+  return `${roundId}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+const defaultDraft = (roundId: string): DecisionDraft => ({
+  submissionKey: createSubmissionKey(roundId),
+  travel: false,
+  course: false,
+  healthCover: false,
+  accidentCover: false,
+  cyberCover: false,
+  toolMaintenance: false,
+  reserveTopUp: false,
+  safetySetup: false,
+  taxReserve: false,
+  retirementPlan: false,
+  legacyReserve: false,
+  buyVehicle: false,
+  buyHouse: false,
+  engagementPrep: false,
+  weddingPlan: false,
+  borrow: "0",
+  repay: "0",
+  debtTarget: "D-consumer",
+  bondBuy: "0",
+  fundBuy: "0",
+  stockBuy: "0",
+  cryptoBuy: "0",
+  optionBuy: "0",
+  optionDir: "CALL",
+  gambleType: "LOTTERY",
+  gambleAmount: "0",
+  riskCrypto: false,
+  riskOption: false,
+  riskGamble: false
+});
+
+const consumeRows = [
+  { key: "travel", label: "旅行与休闲", amount: 2000, score: "+66.7 分", hint: "提升生活体验，但会占用现金流。" },
+  { key: "course", label: "课程学习", amount: 3000, score: "+100 分", hint: "提升能力准备度，也是未来收入的投入。" },
+  { key: "healthCover", label: "健康保障", amount: 500, score: "+16.7 分", hint: "降低医疗类冲击。" },
+  { key: "accidentCover", label: "意外保障", amount: 200, score: "+6.7 分", hint: "对低频高损事件有缓冲。" },
+  { key: "cyberCover", label: "网络安全保障", amount: 150, score: "+5.0 分", hint: "减少诈骗和支付安全风险。" },
+  { key: "toolMaintenance", label: "设备维护", amount: 400, score: "+13.3 分", hint: "降低设备故障的现金冲击。" },
+  { key: "reserveTopUp", label: "补充应急金", amount: 800, score: "+26.7 分", hint: "提升抗波动能力。" },
+  { key: "safetySetup", label: "安全防护", amount: 300, score: "+10.0 分", hint: "降低安全类损失。" },
+  { key: "taxReserve", label: "税务准备", amount: 400, score: "+13.3 分", hint: "减少税务事件带来的冲击。" },
+  { key: "retirementPlan", label: "养老准备", amount: 700, score: "+23.3 分", hint: "强化长期规划。" },
+  { key: "legacyReserve", label: "家庭支持准备", amount: 500, score: "+16.7 分", hint: "应对家庭支出与责任。" },
+  { key: "engagementPrep", label: "订婚准备", amount: 6000, score: "+100 分", hint: "进入订婚阶段，会影响后续家庭路径。" },
+  { key: "weddingPlan", label: "婚礼计划", amount: 18000, score: "+100 分", hint: "进入已婚阶段，后续会有家庭固定支出。" }
+] as const;
+
+const investRows = [
+  { key: "bondBuy", label: "债券基金", asset: "A4", placeholder: "稳健防守型资产" },
+  { key: "fundBuy", label: "股票基金", asset: "A5", placeholder: "分散持有成长资产" },
+  { key: "stockBuy", label: "股票", asset: "A6", placeholder: "波动更大，收益弹性更强" },
+  { key: "cryptoBuy", label: "虚拟币", asset: "A7", placeholder: "高波动高风险" },
+  { key: "optionBuy", label: "期权", asset: "A8", placeholder: "方向性高风险工具" }
+] as const;
+
+function currency(value?: number) {
+  return `¥${Number(value ?? 0).toLocaleString("zh-CN", { maximumFractionDigits: 0 })}`;
+}
+
+function shareText(value: number, denominator: number) {
+  if (denominator <= 0 || value <= 0) {
+    return "0.0%";
+  }
+
+  return `${((value / denominator) * 100).toFixed(1)}%`;
+}
+
 export function StudentDecisionPage(props: StudentDecisionPageProps) {
   const moduleOpt = props.moduleConfig?.opt;
   const canSubmitDecision = props.roundStatus === "open";
@@ -25,151 +112,37 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
   const showRetirement = moduleOpt?.retirement !== false;
   const showLegacy = moduleOpt?.legacy !== false;
   const showRealEstate = moduleOpt?.realestate !== false;
-  const storageKey = `finance-rebuild-decision-${props.currentRoundId}`;
-  const [draftReady, setDraftReady] = useState(false);
-  const [submissionKey, setSubmissionKey] = useState(`${props.currentRoundId}-draft`);
-  const [travel, setTravel] = useState(false);
-  const [course, setCourse] = useState(false);
-  const [healthCover, setHealthCover] = useState(false);
-  const [accidentCover, setAccidentCover] = useState(false);
-  const [cyberCover, setCyberCover] = useState(false);
-  const [toolMaintenance, setToolMaintenance] = useState(false);
-  const [reserveTopUp, setReserveTopUp] = useState(false);
-  const [safetySetup, setSafetySetup] = useState(false);
-  const [taxReserve, setTaxReserve] = useState(false);
-  const [retirementPlan, setRetirementPlan] = useState(false);
-  const [legacyReserve, setLegacyReserve] = useState(false);
-  const [buyVehicle, setBuyVehicle] = useState(false);
-  const [buyHouse, setBuyHouse] = useState(false);
-  const [engagementPrep, setEngagementPrep] = useState(false);
-  const [weddingPlan, setWeddingPlan] = useState(false);
-  const [borrow, setBorrow] = useState("0");
-  const [repay, setRepay] = useState("0");
-  const [debtTarget, setDebtTarget] = useState("D-consumer");
-  const [bondBuy, setBondBuy] = useState("0");
-  const [fundBuy, setFundBuy] = useState("0");
-  const [stockBuy, setStockBuy] = useState("0");
-  const [cryptoBuy, setCryptoBuy] = useState("0");
-  const [optionBuy, setOptionBuy] = useState("0");
-  const [optionDir, setOptionDir] = useState<"CALL" | "PUT">("CALL");
-  const [gambleType, setGambleType] = useState("LOTTERY");
-  const [gambleAmount, setGambleAmount] = useState("0");
-  const [riskCrypto, setRiskCrypto] = useState(false);
-  const [riskOption, setRiskOption] = useState(false);
-  const [riskGamble, setRiskGamble] = useState(false);
+  const [draft, setDraft] = useState<DecisionDraft>(() => readDecisionDraft(props.currentRoundId) ?? defaultDraft(props.currentRoundId));
 
   useEffect(() => {
-    try {
-      const raw = window.sessionStorage.getItem(storageKey);
-      if (!raw) return;
-      const draft = JSON.parse(raw) as Record<string, unknown>;
-      setSubmissionKey(String(draft.submissionKey ?? `${props.currentRoundId}-draft`));
-      setTravel(Boolean(draft.travel));
-      setCourse(Boolean(draft.course));
-      setHealthCover(Boolean(draft.healthCover));
-      setAccidentCover(Boolean(draft.accidentCover));
-      setCyberCover(Boolean(draft.cyberCover));
-      setToolMaintenance(Boolean(draft.toolMaintenance));
-      setReserveTopUp(Boolean(draft.reserveTopUp));
-      setSafetySetup(Boolean(draft.safetySetup));
-      setTaxReserve(Boolean(draft.taxReserve));
-      setRetirementPlan(Boolean(draft.retirementPlan));
-      setLegacyReserve(Boolean(draft.legacyReserve));
-      setBuyVehicle(Boolean(draft.buyVehicle));
-      setBuyHouse(Boolean(draft.buyHouse));
-      setEngagementPrep(Boolean(draft.engagementPrep));
-      setWeddingPlan(Boolean(draft.weddingPlan));
-      setBorrow(String(draft.borrow ?? "0"));
-      setRepay(String(draft.repay ?? "0"));
-      setDebtTarget(String(draft.debtTarget ?? "D-consumer"));
-      setBondBuy(String(draft.bondBuy ?? "0"));
-      setFundBuy(String(draft.fundBuy ?? "0"));
-      setStockBuy(String(draft.stockBuy ?? "0"));
-      setCryptoBuy(String(draft.cryptoBuy ?? "0"));
-      setOptionBuy(String(draft.optionBuy ?? "0"));
-      setOptionDir((draft.optionDir as "CALL" | "PUT") ?? "CALL");
-      setGambleType(String(draft.gambleType ?? "LOTTERY"));
-      setGambleAmount(String(draft.gambleAmount ?? "0"));
-      setRiskCrypto(Boolean(draft.riskCrypto));
-      setRiskOption(Boolean(draft.riskOption));
-      setRiskGamble(Boolean(draft.riskGamble));
-    } catch {
-      window.sessionStorage.removeItem(storageKey);
+    setDraft(readDecisionDraft(props.currentRoundId) ?? defaultDraft(props.currentRoundId));
+  }, [props.currentRoundId]);
+
+  useEffect(() => {
+    writeDecisionDraft(props.currentRoundId, draft);
+  }, [draft, props.currentRoundId]);
+
+  const preview = useMemo(() => {
+    if (!props.budget) {
+      return null;
     }
-    setDraftReady(true);
-  }, [storageKey, props.currentRoundId]);
 
-  useEffect(() => {
-    if (!draftReady) return;
-    window.sessionStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        travel,
-        submissionKey,
-        course,
-        healthCover,
-        accidentCover,
-        cyberCover,
-        toolMaintenance,
-        reserveTopUp,
-        safetySetup,
-        taxReserve,
-        retirementPlan,
-        legacyReserve,
-        buyVehicle,
-        buyHouse,
-        engagementPrep,
-        weddingPlan,
-        borrow,
-        repay,
-        debtTarget,
-        bondBuy,
-        fundBuy,
-        stockBuy,
-        cryptoBuy,
-        optionBuy,
-        optionDir,
-        gambleType,
-        gambleAmount,
-        riskCrypto,
-        riskOption,
-        riskGamble
-      })
-    );
-  }, [
-    draftReady,
-    storageKey,
-    travel,
-    submissionKey,
-    course,
-    healthCover,
-    accidentCover,
-    cyberCover,
-    toolMaintenance,
-    reserveTopUp,
-    safetySetup,
-    taxReserve,
-    retirementPlan,
-    legacyReserve,
-    buyVehicle,
-    buyHouse,
-    engagementPrep,
-    weddingPlan,
-    borrow,
-    repay,
-    debtTarget,
-    bondBuy,
-    fundBuy,
-    stockBuy,
-    cryptoBuy,
-    optionBuy,
-    optionDir,
-    gambleType,
-    gambleAmount,
-    riskCrypto,
-    riskOption,
-    riskGamble
-  ]);
+    return buildDecisionPreview({
+      draft,
+      budget: props.budget,
+      student: props.student
+    });
+  }, [draft, props.budget, props.student]);
+
+  const blockedByRiskAck =
+    (Number(draft.cryptoBuy) > 0 && !draft.riskCrypto) ||
+    (Number(draft.optionBuy) > 0 && !draft.riskOption) ||
+    (Number(draft.gambleAmount) > 0 && !draft.riskGamble);
+  const submitBlocked = blockedByRiskAck || !canSubmitDecision || !props.budget;
+
+  const updateDraft = <K extends keyof DecisionDraft>(key: K, value: DecisionDraft[K]) => {
+    setDraft((current) => ({ ...current, [key]: value }));
+  };
 
   async function handleSubmit() {
     if (!canSubmitDecision) {
@@ -181,264 +154,328 @@ export function StudentDecisionPage(props: StudentDecisionPageProps) {
     let gamble = null;
     let option = null;
 
-    if (travel) consume.push({ id: "C1", amount: 2000 });
-    if (course) consume.push({ id: "C3", amount: 3000 });
-    if (healthCover) consume.push({ id: "I1", amount: 500 });
-    if (accidentCover) consume.push({ id: "P1", amount: 200 });
-    if (cyberCover) consume.push({ id: "P2", amount: 150 });
-    if (toolMaintenance) consume.push({ id: "T1", amount: 400 });
-    if (reserveTopUp) consume.push({ id: "R1", amount: 800 });
-    if (safetySetup) consume.push({ id: "S1", amount: 300 });
-    if (showTax && taxReserve) consume.push({ id: "X1", amount: 400 });
-    if (showRetirement && retirementPlan) consume.push({ id: "Q1", amount: 700 });
-    if (showLegacy && legacyReserve) consume.push({ id: "L1", amount: 500 });
-    if (buyVehicle) consume.push({ id: "C5", amount: 24000 });
-    if (showRealEstate && buyHouse) consume.push({ id: "H1", amount: 60000 });
-    if (engagementPrep) consume.push({ id: "M1", amount: 6000 });
-    if (weddingPlan) consume.push({ id: "W1", amount: 18000 });
+    if (draft.travel) consume.push({ id: "C1", amount: 2000 });
+    if (draft.course) consume.push({ id: "C3", amount: 3000 });
+    if (draft.healthCover) consume.push({ id: "I1", amount: 500 });
+    if (draft.accidentCover) consume.push({ id: "P1", amount: 200 });
+    if (draft.cyberCover) consume.push({ id: "P2", amount: 150 });
+    if (draft.toolMaintenance) consume.push({ id: "T1", amount: 400 });
+    if (draft.reserveTopUp) consume.push({ id: "R1", amount: 800 });
+    if (draft.safetySetup) consume.push({ id: "S1", amount: 300 });
+    if (showTax && draft.taxReserve) consume.push({ id: "X1", amount: 400 });
+    if (showRetirement && draft.retirementPlan) consume.push({ id: "Q1", amount: 700 });
+    if (showLegacy && draft.legacyReserve) consume.push({ id: "L1", amount: 500 });
+    if (draft.buyVehicle) consume.push({ id: "C5", amount: 24000 });
+    if (showRealEstate && draft.buyHouse) consume.push({ id: "H1", amount: 60000 });
+    if (draft.engagementPrep) consume.push({ id: "M1", amount: 6000 });
+    if (draft.weddingPlan) consume.push({ id: "W1", amount: 18000 });
 
-    if (Number(bondBuy) > 0) invest.push({ asset: "A4", action: "buy" as const, amount: Number(bondBuy) });
-    if (Number(fundBuy) > 0) invest.push({ asset: "A5", action: "buy" as const, amount: Number(fundBuy) });
-    if (Number(stockBuy) > 0) invest.push({ asset: "A6", action: "buy" as const, amount: Number(stockBuy) });
-    if (Number(cryptoBuy) > 0) invest.push({ asset: "A7", action: "buy" as const, amount: Number(cryptoBuy) });
+    if (Number(draft.bondBuy) > 0) invest.push({ asset: "A4", action: "buy" as const, amount: Number(draft.bondBuy) });
+    if (Number(draft.fundBuy) > 0) invest.push({ asset: "A5", action: "buy" as const, amount: Number(draft.fundBuy) });
+    if (Number(draft.stockBuy) > 0) invest.push({ asset: "A6", action: "buy" as const, amount: Number(draft.stockBuy) });
+    if (Number(draft.cryptoBuy) > 0) invest.push({ asset: "A7", action: "buy" as const, amount: Number(draft.cryptoBuy) });
 
-    if (Number(optionBuy) > 0) {
-      invest.push({ asset: "A8", action: "buy" as const, amount: Number(optionBuy) });
-      option = { direction: optionDir, amount: Number(optionBuy) };
+    if (Number(draft.optionBuy) > 0) {
+      invest.push({ asset: "A8", action: "buy" as const, amount: Number(draft.optionBuy) });
+      option = { direction: draft.optionDir, amount: Number(draft.optionBuy) };
     }
 
-    if (Number(gambleAmount) > 0) {
-      gamble = { type: gambleType, amount: Number(gambleAmount) };
+    if (Number(draft.gambleAmount) > 0) {
+      gamble = { type: draft.gambleType, amount: Number(draft.gambleAmount) };
     }
 
     await props.onSubmitDecision({
-      idempotencyKey: submissionKey,
+      idempotencyKey: draft.submissionKey,
       consume,
       loan: {
-        borrow: Number(borrow),
-        repay: Number(repay),
-        allocateTo: debtTarget
+        borrow: Number(draft.borrow),
+        repay: Number(draft.repay),
+        allocateTo: draft.debtTarget
       },
       invest,
       option,
       gamble,
       riskAck: [
-        ...(riskCrypto ? ["A7"] : []),
-        ...(riskOption ? ["A8"] : []),
-        ...(riskGamble ? ["A9"] : [])
+        ...(draft.riskCrypto ? ["A7"] : []),
+        ...(draft.riskOption ? ["A8"] : []),
+        ...(draft.riskGamble ? ["A9"] : [])
       ]
     });
 
-    window.sessionStorage.removeItem(storageKey);
-    setSubmissionKey(`${props.currentRoundId}-submitted`);
+    setDraft((current) => ({
+      ...current,
+      submissionKey: createSubmissionKey(props.currentRoundId)
+    }));
   }
-
-  const blockedByRiskAck =
-    (Number(cryptoBuy) > 0 && !riskCrypto) ||
-    (Number(optionBuy) > 0 && !riskOption) ||
-    (Number(gambleAmount) > 0 && !riskGamble);
-  const submitBlocked = blockedByRiskAck || !canSubmitDecision;
 
   return (
     <section className="page-stack">
       <article className="panel dashboard-hero">
         <div>
-          <p className="eyebrow">学生决策</p>
-          <h2>本回合决策包</h2>
-          <p>在这里填写本回合的消费、保障、借贷、投资和高风险操作。</p>
+          <p className="eyebrow">学生资金配置</p>
+          <h2>先看事件，再做本轮资金分配</h2>
+          <p>这里会实时预览你的可支配资金、预计借款、资金分布和固定成本变化。返回首页后，草稿也会继续保留。</p>
         </div>
         <div className="action-row">
           <button type="button" className="ghost-button" onClick={props.onBack}>
-            返回
+            返回首页
           </button>
         </div>
       </article>
 
-      <article className="panel auth-panel">
-        <p>
-          准备项会影响后续个人事件后果：学习会提升机会收益，健康险和意外险会减轻医疗冲击，网络安全会减少诈骗损失，
-          设备维护会减轻设备故障冲击，应急储备能缓冲现金流压力，税务和退休准备会强化长期规划，家庭支持储备会缓和照护与人情支出，
-          而买车、买房和婚姻决策会带来长期固定成本。
-        </p>
+      {preview ? (
+        <article className="panel page-panel">
+          <div className="section-head">
+            <div>
+              <p className="eyebrow">预算预览</p>
+              <h3>先看本轮有多少钱可以分配</h3>
+            </div>
+            <span className={preview.totalBorrow > 0 ? "risk-tag" : "info-tag"}>
+              {preview.totalBorrow > 0 ? `预计新增借款 ${currency(preview.totalBorrow)}` : "当前分配未触发新增借款"}
+            </span>
+          </div>
+          <div className="metric-grid dense">
+            <article className="metric-card compact">
+              <span>本轮可支配金额</span>
+              <strong>{currency(preview.availableCash)}</strong>
+            </article>
+            <article className="metric-card compact">
+              <span>计划生活消费</span>
+              <strong>{currency(preview.plannedConsume)}</strong>
+            </article>
+            <article className="metric-card compact">
+              <span>计划金融资产投入</span>
+              <strong>{currency(preview.plannedInvest)}</strong>
+            </article>
+            <article className="metric-card compact">
+              <span>计划高风险资金</span>
+              <strong>{currency(preview.plannedRisk)}</strong>
+            </article>
+            <article className="metric-card compact">
+              <span>预计提交后现金</span>
+              <strong>{currency(preview.projectedCash)}</strong>
+            </article>
+            <article className="metric-card compact">
+              <span>预计净资产</span>
+              <strong>{currency(preview.projectedNetWorth)}</strong>
+            </article>
+            <article className="metric-card compact">
+              <span>预计应急金月数</span>
+              <strong>{preview.projectedEmergencyMonths.toFixed(1)} 月</strong>
+            </article>
+            <article className="metric-card compact">
+              <span>预计生活品质分</span>
+              <strong>{preview.projectedLifeScore.toFixed(1)}</strong>
+            </article>
+          </div>
+          {preview.autoBridgeBorrow > 0 ? (
+            <p className="form-error">当前分配已经超过本轮可支配金额，系统预计会自动垫付借款 {currency(preview.autoBridgeBorrow)}。</p>
+          ) : null}
+          <div className="three-col-grid">
+            {preview.categoryDistribution.map((item) => (
+              <div key={item.key} className="compact-panel">
+                <strong>{item.label}</strong>
+                <p>{currency(item.value)}</p>
+                <p>占可支配资金 {item.share.toFixed(1)}%</p>
+              </div>
+            ))}
+          </div>
+        </article>
+      ) : null}
 
-        <label className="checkbox-row">
-          <input type="checkbox" checked={travel} onChange={(event) => setTravel(event.target.checked)} />
-          增加旅游消费（C1 / 2000）
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={course} onChange={(event) => setCourse(event.target.checked)} />
-          增加学习课程（C3 / 3000）
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={healthCover} onChange={(event) => setHealthCover(event.target.checked)} />
-          增加健康保障（I1 / 500）
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={accidentCover} onChange={(event) => setAccidentCover(event.target.checked)} />
-          增加意外保障（P1 / 200）
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={cyberCover} onChange={(event) => setCyberCover(event.target.checked)} />
-          增加网络安全保障（P2 / 150）
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={toolMaintenance} onChange={(event) => setToolMaintenance(event.target.checked)} />
-          增加工具维护（T1 / 400）
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={reserveTopUp} onChange={(event) => setReserveTopUp(event.target.checked)} />
-          增加应急储备（R1 / 800）
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={safetySetup} onChange={(event) => setSafetySetup(event.target.checked)} />
-          增加安全设置（S1 / 300）
-        </label>
-
-        {showTax ? (
-          <label className="checkbox-row">
-            <input type="checkbox" checked={taxReserve} onChange={(event) => setTaxReserve(event.target.checked)} />
-            增加税务预留（X1 / 400）
+      <article className="panel page-panel">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">生活消费</p>
+            <h3>消费不仅花钱，也会影响生活品质分</h3>
+          </div>
+        </div>
+        <div className="student-list">
+          {consumeRows
+            .filter((item) => {
+              if (item.key === "taxReserve") return showTax;
+              if (item.key === "retirementPlan") return showRetirement;
+              if (item.key === "legacyReserve") return showLegacy;
+              return true;
+            })
+            .map((item) => (
+              <label key={item.key} className="compact-panel">
+                <span className="student-row">
+                  <strong>{item.label}</strong>
+                  <span>
+                    {currency(item.amount)} / {preview ? shareText(item.amount, preview.availableCash) : "0.0%"} / {item.score}
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(draft[item.key])}
+                  onChange={(event) => updateDraft(item.key, event.target.checked as never)}
+                />
+                <p>{item.hint}</p>
+              </label>
+            ))}
+          <label className="compact-panel">
+            <span className="student-row">
+              <strong>购车首付</strong>
+              <span>
+                {currency(24000)} / {preview ? shareText(24000, preview.availableCash) : "0.0%"}
+              </span>
+            </span>
+            <input type="checkbox" checked={draft.buyVehicle} onChange={(event) => updateDraft("buyVehicle", event.target.checked)} />
+            <p>车辆购置后，首页会同步预览车辆估值与每轮固定成本。</p>
           </label>
-        ) : null}
+          {showRealEstate ? (
+            <label className="compact-panel">
+              <span className="student-row">
+                <strong>购房首付</strong>
+                <span>
+                  {currency(60000)} / {preview ? shareText(60000, preview.availableCash) : "0.0%"}
+                </span>
+              </span>
+              <input type="checkbox" checked={draft.buyHouse} onChange={(event) => updateDraft("buyHouse", event.target.checked)} />
+              <p>房产会进入长期固定成本模块，同时预览房产估值。</p>
+            </label>
+          ) : null}
+        </div>
+      </article>
 
-        {showRetirement ? (
-          <label className="checkbox-row">
-            <input type="checkbox" checked={retirementPlan} onChange={(event) => setRetirementPlan(event.target.checked)} />
-            增加退休计划（Q1 / 700）
+      <article className="panel page-panel">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">金融资产</p>
+            <h3>按金额配置，同时看占可支配资金的比例</h3>
+          </div>
+        </div>
+        <div className="three-col-grid">
+          {investRows.map((item) => (
+            <label key={item.key} className="compact-panel">
+              <strong>
+                {item.label} {item.asset}
+              </strong>
+              <input
+                type="number"
+                min="0"
+                value={draft[item.key]}
+                onChange={(event) => updateDraft(item.key, event.target.value as never)}
+              />
+              <p>{item.placeholder}</p>
+              <p>占可支配资金 {preview ? shareText(Number(draft[item.key]), preview.availableCash) : "0.0%"}</p>
+            </label>
+          ))}
+        </div>
+      </article>
+
+      <article className="panel page-panel">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">借款与高风险</p>
+            <h3>超额配置会触发借款，借款会被重点高亮</h3>
+          </div>
+        </div>
+        <div className="three-col-grid">
+          <label className="compact-panel">
+            <strong>主动借款</strong>
+            <input type="number" min="0" value={draft.borrow} onChange={(event) => updateDraft("borrow", event.target.value)} />
+            <p>你主动输入的新增借款金额。</p>
           </label>
-        ) : null}
-
-        {showLegacy ? (
-          <label className="checkbox-row">
-            <input type="checkbox" checked={legacyReserve} onChange={(event) => setLegacyReserve(event.target.checked)} />
-            增加家庭支持储备（L1 / 500）
+          <label className="compact-panel">
+            <strong>还款金额</strong>
+            <input type="number" min="0" value={draft.repay} onChange={(event) => updateDraft("repay", event.target.value)} />
+            <p>本轮想主动偿还的金额。</p>
           </label>
-        ) : null}
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={buyVehicle} onChange={(event) => setBuyVehicle(event.target.checked)} />
-          买车（C5 / 首付 24000，之后每轮固定支出 2800）
-        </label>
-
-        {showRealEstate ? (
-          <label className="checkbox-row">
-            <input type="checkbox" checked={buyHouse} onChange={(event) => setBuyHouse(event.target.checked)} />
-            买房（H1 / 首付 60000，之后每轮固定支出 2200）
+          <label className="compact-panel">
+            <strong>借款目标</strong>
+            <select value={draft.debtTarget} onChange={(event) => updateDraft("debtTarget", event.target.value)}>
+              <option value="D-consumer">消费贷</option>
+              <option value="D-device">设备分期</option>
+              <option value="D-medical">医疗垫付贷</option>
+              <option value="D-social">家庭人情垫付贷</option>
+              <option value="D-bridge">应急过桥贷</option>
+              <option value="AUTO">自动还款顺序</option>
+            </select>
+            <p>决定新增借款优先进入哪个债务池。</p>
           </label>
-        ) : null}
+          <label className="compact-panel">
+            <strong>高风险资金</strong>
+            <input
+              type="number"
+              min="0"
+              value={draft.gambleAmount}
+              onChange={(event) => updateDraft("gambleAmount", event.target.value)}
+            />
+            <p>占可支配资金 {preview ? shareText(Number(draft.gambleAmount), preview.availableCash) : "0.0%"}</p>
+          </label>
+          <label className="compact-panel">
+            <strong>高风险类型</strong>
+            <select value={draft.gambleType} onChange={(event) => updateDraft("gambleType", event.target.value)}>
+              <option value="LOTTERY">彩票</option>
+              <option value="SPORTS">体育竞猜</option>
+              <option value="CASINO">赌博</option>
+              <option value="SCAM">诈骗项目</option>
+            </select>
+            <p>这部分会单独列在高风险资金中。</p>
+          </label>
+          <label className="compact-panel">
+            <strong>期权方向</strong>
+            <select value={draft.optionDir} onChange={(event) => updateDraft("optionDir", event.target.value as "CALL" | "PUT")}>
+              <option value="CALL">看涨 CALL</option>
+              <option value="PUT">看跌 PUT</option>
+            </select>
+            <p>仅在配置了期权时生效。</p>
+          </label>
+        </div>
+        <div className="tag-row">
+          <label className="info-tag">
+            <input type="checkbox" checked={draft.riskCrypto} onChange={(event) => updateDraft("riskCrypto", event.target.checked)} />
+            我已知晓虚拟币风险
+          </label>
+          <label className="info-tag">
+            <input type="checkbox" checked={draft.riskOption} onChange={(event) => updateDraft("riskOption", event.target.checked)} />
+            我已知晓期权风险
+          </label>
+          <label className="info-tag">
+            <input type="checkbox" checked={draft.riskGamble} onChange={(event) => updateDraft("riskGamble", event.target.checked)} />
+            我已知晓高风险投机风险
+          </label>
+        </div>
+      </article>
 
-        <label className="checkbox-row">
-          <input type="checkbox" checked={engagementPrep} onChange={(event) => setEngagementPrep(event.target.checked)} />
-          订婚准备（M1 / 一次性 6000，并进入订婚阶段）
-        </label>
+      {preview ? (
+        <article className="panel page-panel">
+          <div className="section-head">
+            <div>
+              <p className="eyebrow">资金分布</p>
+              <h3>配置时就能直观看到钱会流向哪里</h3>
+            </div>
+          </div>
+          <div className="table-grid">
+            <div className="table-grid-head">
+              <span>类别</span>
+              <span>金额</span>
+              <span>占预计总资产</span>
+            </div>
+            {preview.assetDistribution.map((item) => (
+              <div key={item.key} className="table-grid-row">
+                <span>{item.label}</span>
+                <span>{currency(item.value)}</span>
+                <span>{item.share.toFixed(1)}%</span>
+              </div>
+            ))}
+          </div>
+        </article>
+      ) : null}
 
-        <label className="checkbox-row">
-          <input type="checkbox" checked={weddingPlan} onChange={(event) => setWeddingPlan(event.target.checked)} />
-          婚礼计划（W1 / 一次性 18000，之后每轮家庭支出 900）
-        </label>
+      {blockedByRiskAck ? <p className="form-error">你配置了高风险资产或高风险投机，但还没有勾选风险确认。</p> : null}
+      {!canSubmitDecision ? <p className="form-error">当前回合未开放或已被教师锁定，暂时不能提交决策。</p> : null}
 
-        <label>
-          借款金额
-          <input type="number" min="0" value={borrow} onChange={(event) => setBorrow(event.target.value)} />
-        </label>
-
-        <label>
-          借款目标
-          <select value={debtTarget} onChange={(event) => setDebtTarget(event.target.value)}>
-            <option value="D-consumer">消费贷</option>
-            <option value="D-device">设备分期</option>
-            <option value="D-medical">医疗纾困</option>
-            <option value="D-social">家庭人情周转</option>
-            <option value="D-bridge">应急过桥债</option>
-            <option value="AUTO">自动还款顺序</option>
-          </select>
-        </label>
-
-        <label>
-          还款金额
-          <input type="number" min="0" value={repay} onChange={(event) => setRepay(event.target.value)} />
-        </label>
-
-        <label>
-          买入债券基金（A4）
-          <input type="number" min="0" value={bondBuy} onChange={(event) => setBondBuy(event.target.value)} />
-        </label>
-
-        <label>
-          买入股票基金（A5）
-          <input type="number" min="0" value={fundBuy} onChange={(event) => setFundBuy(event.target.value)} />
-        </label>
-
-        <label>
-          买入股票（A6）
-          <input type="number" min="0" value={stockBuy} onChange={(event) => setStockBuy(event.target.value)} />
-        </label>
-
-        <label>
-          买入虚拟币（A7）
-          <input type="number" min="0" value={cryptoBuy} onChange={(event) => setCryptoBuy(event.target.value)} />
-        </label>
-
-        <label>
-          买入期权（A8）
-          <input type="number" min="0" value={optionBuy} onChange={(event) => setOptionBuy(event.target.value)} />
-        </label>
-
-        <label>
-          期权方向
-          <select value={optionDir} onChange={(event) => setOptionDir(event.target.value as "CALL" | "PUT")}>
-            <option value="CALL">看涨 CALL</option>
-            <option value="PUT">看跌 PUT</option>
-          </select>
-        </label>
-
-        <label>
-          赌博/诈骗类型
-          <select value={gambleType} onChange={(event) => setGambleType(event.target.value)}>
-            <option value="LOTTERY">彩票</option>
-            <option value="SPORTS">体育投注</option>
-            <option value="CASINO">赌场</option>
-            <option value="SCAM">诈骗盘</option>
-          </select>
-        </label>
-
-        <label>
-          赌博/诈骗金额
-          <input type="number" min="0" value={gambleAmount} onChange={(event) => setGambleAmount(event.target.value)} />
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={riskCrypto} onChange={(event) => setRiskCrypto(event.target.checked)} />
-          确认虚拟币属于高风险暴露
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={riskOption} onChange={(event) => setRiskOption(event.target.checked)} />
-          确认期权属于高风险暴露
-        </label>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={riskGamble} onChange={(event) => setRiskGamble(event.target.checked)} />
-          确认赌博和诈骗风险
-        </label>
-
-        {blockedByRiskAck ? <p className="form-error">高风险资产和赌博/诈骗操作必须先勾选风险确认。</p> : null}
-        {!canSubmitDecision ? <p className="form-error">当前回合未开放或已被教师锁定，暂时不能提交决策。</p> : null}
-
+      <article className="panel page-panel">
         <button
           type="button"
           disabled={props.loading || submitBlocked}
           onClick={handleSubmit}
-          title={!canSubmitDecision ? "只有在教师开放回合时，学生才能提交资产配置。" : undefined}
+          title={!canSubmitDecision ? "只有在教师开放回合时，学生才能提交资金配置。" : undefined}
         >
-          {props.loading ? "提交中..." : "提交决策"}
+          {props.loading ? "提交中..." : "提交本轮资金配置"}
         </button>
       </article>
     </section>

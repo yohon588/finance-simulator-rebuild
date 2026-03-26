@@ -190,6 +190,7 @@ function createRound(roundNo = 1) {
     id: crypto.randomUUID(),
     no: roundNo,
     status: "draft",
+    teachingTopic: null,
     eventId: null,
     costIndex: 1,
     decisions: {},
@@ -1522,9 +1523,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
       (student) => student.displayName.trim().toLowerCase() === normalizedDisplayName
     );
     if (existingStudent) {
-      const session = createSession("student", existingStudent.id, room.id);
-      await repository.saveSession(session);
-      return buildStudentPayload(room, session, moduleConfig);
+      return { error: "DISPLAY_NAME_TAKEN" };
     }
     if ((room.students?.length ?? 0) >= maxStudentsPerRoom) {
       return { error: "ROOM_FULL" };
@@ -1610,6 +1609,22 @@ export function createMemoryStore(moduleConfig, options = {}) {
     room.round.settledAt = null;
     await repository.saveRoom(room, { syncStudents: false, syncRound: true, syncArchives: false });
 
+    return buildTeacherPayload(room, session, moduleConfig);
+  }
+
+  async function setTeachingTopic(token, teachingTopic) {
+    const session = await repository.getSession(token);
+    if (!session || session.role !== "teacher") {
+      return { error: "UNAUTHORIZED" };
+    }
+
+    const room = await repository.getRoom(session.roomId);
+    if (!room) {
+      return { error: "ROOM_NOT_FOUND" };
+    }
+
+    room.round.teachingTopic = teachingTopic ?? null;
+    await repository.saveRoom(room, { syncStudents: false, syncRound: true, syncArchives: false });
     return buildTeacherPayload(room, session, moduleConfig);
   }
 
@@ -2195,6 +2210,7 @@ export function createMemoryStore(moduleConfig, options = {}) {
     joinRoom,
     rejoinStudent,
     rejoinTeacher,
+    setTeachingTopic,
     openRound,
     lockRound,
     settleRound,

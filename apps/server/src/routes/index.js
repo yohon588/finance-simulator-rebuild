@@ -2,6 +2,24 @@ import { createMemoryStore } from "../services/memory-store.js";
 import { getBearerToken, readJsonBody } from "../services/request.js";
 import { sendJson, sendText } from "../services/response.js";
 
+const VALID_TEACHING_TOPICS = new Set([
+  "income_vs_cash",
+  "budget_boundary",
+  "fixed_cost_pressure",
+  "emergency_buffer",
+  "insurance_protection",
+  "risk_resilience",
+  "debt_ratio_dsr",
+  "minimum_payment_trap",
+  "good_vs_bad_debt",
+  "impulse_spending",
+  "quality_vs_growth_spending",
+  "car_home_cashflow",
+  "family_lifecycle_cost",
+  "asset_allocation",
+  "financial_freedom"
+]);
+
 export function createRouter(context) {
   const store = createMemoryStore(context.moduleConfig, { repository: context.repository });
 
@@ -134,6 +152,30 @@ export function createRouter(context) {
       }
       if (payload.error === "ROUND_ALREADY_ACTIVE" || payload.error === "ROUND_CLOSED") {
         sendJson(response, 409, payload);
+        return;
+      }
+      if (payload.error) {
+        sendJson(response, 404, payload);
+        return;
+      }
+      sendJson(response, 200, payload);
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/teacher/teaching-topic") {
+      const token = getBearerToken(request);
+      const body = await readJsonBody(request);
+      if (body.teachingTopic !== null && typeof body.teachingTopic !== "string") {
+        sendJson(response, 400, { error: "INVALID_TEACHING_TOPIC" });
+        return;
+      }
+      if (typeof body.teachingTopic === "string" && !VALID_TEACHING_TOPICS.has(body.teachingTopic)) {
+        sendJson(response, 400, { error: "INVALID_TEACHING_TOPIC" });
+        return;
+      }
+      const payload = await store.setTeachingTopic(token, body.teachingTopic ?? null);
+      if (payload.error === "UNAUTHORIZED") {
+        sendJson(response, 401, payload);
         return;
       }
       if (payload.error) {

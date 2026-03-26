@@ -6,18 +6,16 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const schemaPath = path.resolve(currentDir, "../db/schema.sql");
 
 export async function createPostgresRepository(connectionString) {
-  const { Client } = await import("pg");
+  const { Pool } = await import("pg");
 
-  const client = new Client({
+  const pool = new Pool({
     connectionString
   });
 
-  await client.connect();
-
   const schemaSql = fs.readFileSync(schemaPath, "utf8");
-  await client.query(schemaSql);
+  await pool.query(schemaSql);
 
-  await client.query(`
+  await pool.query(`
     create table if not exists classroom_runtime_snapshots (
       classroom_id uuid primary key references classrooms(id) on delete cascade,
       payload_json jsonb not null,
@@ -25,7 +23,7 @@ export async function createPostgresRepository(connectionString) {
     )
   `);
 
-  await client.query(`
+  await pool.query(`
     create table if not exists auth_sessions (
       token varchar(120) primary key,
       role varchar(24) not null,
@@ -37,29 +35,29 @@ export async function createPostgresRepository(connectionString) {
     )
   `);
 
-  async function syncNormalizedStudentTables(room) {
-    await client.query("delete from student_assets where user_id in (select id from users where classroom_id = $1)", [room.id]);
-    await client.query("delete from student_debts where user_id in (select id from users where classroom_id = $1)", [room.id]);
-    await client.query("delete from student_states where user_id in (select id from users where classroom_id = $1)", [room.id]);
-    await client.query("delete from users where classroom_id = $1", [room.id]);
+  async function syncNormalizedStudentTables(room, db = pool) {
+    await db.query("delete from student_assets where user_id in (select id from users where classroom_id = $1)", [room.id]);
+    await db.query("delete from student_debts where user_id in (select id from users where classroom_id = $1)", [room.id]);
+    await db.query("delete from student_states where user_id in (select id from users where classroom_id = $1)", [room.id]);
+    await db.query("delete from users where classroom_id = $1", [room.id]);
 
     const teacherUserId = room.teacherUserId ?? `00000000-0000-4000-8000-${room.id.replace(/-/g, "").slice(-12)}`;
     room.teacherUserId = teacherUserId;
 
-    await client.query(
+    await db.query(
       `insert into users (id, classroom_id, role, display_name)
        values ($1, $2, 'teacher', $3)`,
       [teacherUserId, room.id, room.teacherName]
     );
 
     for (const student of room.students ?? []) {
-      await client.query(
+      await db.query(
         `insert into users (id, classroom_id, role, display_name, role_id, base_salary)
          values ($1, $2, 'student', $3, $4, $5)`,
         [student.id, room.id, student.displayName, student.roleId, student.baseSalary]
       );
 
-      await client.query(
+      await db.query(
         `insert into student_states (
            user_id, cash, lq, boosts, arrears, late_count, defaults_count, start_worth, insurance_flags, module_flags
          )
@@ -84,7 +82,7 @@ export async function createPostgresRepository(connectionString) {
       );
 
       for (const [assetId, amount] of Object.entries(student.assets ?? {})) {
-        await client.query(
+        await db.query(
           `insert into student_assets (user_id, asset_id, amount)
            values ($1, $2, $3)`,
           [student.id, assetId, amount]
@@ -92,7 +90,7 @@ export async function createPostgresRepository(connectionString) {
       }
 
       for (const debt of student.debts ?? []) {
-        await client.query(
+        await db.query(
           `insert into student_debts (user_id, debt_type, creditor, principal, rate_monthly, min_pay, missed_rounds, status)
            values ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [
@@ -110,7 +108,7 @@ export async function createPostgresRepository(connectionString) {
     }
   }
 
-  async function syncRoundRuntimeTables(room) {
+  async function syncRoundRuntimeTables(room, db = pool) {
     const round = room.round ?? null;
     if (!round) {
       return;
@@ -127,7 +125,7 @@ export async function createPostgresRepository(connectionString) {
       rankingTop3: currentRoundHistoryEntry?.rankingTop3 ?? null
     };
 
-    await client.query(
+    await db.query(
       `insert into room_seasons (id, classroom_id, round_no, status, event_id, cost_index, random_seed, module_flags, updated_at)
        values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, now())
        on conflict (id)
@@ -151,12 +149,12 @@ export async function createPostgresRepository(connectionString) {
       ]
     );
 
-    await client.query("delete from round_decisions where season_id = $1", [round.id]);
-    await client.query("delete from round_random_events where season_id = $1", [round.id]);
-    await client.query("delete from round_ledgers where season_id = $1", [round.id]);
+    await db.query("delete from round_decisions where season_id = $1", [round.id]);
+    await db.query("delete from round_random_events where season_id = $1", [round.id]);
+    await db.query("delete from round_ledgers where season_id = $1", [round.id]);
 
     for (const [userId, decision] of Object.entries(round.decisions ?? {})) {
-      await client.query(
+      await db.query(
         `insert into round_decisions (season_id, user_id, idempotency_key, payload_json, submitted_at)
          values ($1, $2, $3, $4::jsonb, $5)`,
         [
@@ -170,7 +168,7 @@ export async function createPostgresRepository(connectionString) {
     }
 
     for (const [userId, dice] of Object.entries(round.dice ?? {})) {
-      await client.query(
+      await db.query(
         `insert into round_random_events (
            season_id, user_id, dice_roll, category, card_id, base_effect_json, applied_effect_json, knowledge_point, teacher_note
          )
@@ -194,7 +192,7 @@ export async function createPostgresRepository(connectionString) {
         continue;
       }
 
-      await client.query(
+      await db.query(
         `insert into round_ledgers (season_id, user_id, payload_json, replay_hash)
          values ($1, $2, $3::jsonb, $4)`,
         [
@@ -207,11 +205,11 @@ export async function createPostgresRepository(connectionString) {
     }
   }
 
-  async function syncArchiveTables(room) {
-    await client.query("delete from room_archives where classroom_id = $1", [room.id]);
+  async function syncArchiveTables(room, db = pool) {
+    await db.query("delete from room_archives where classroom_id = $1", [room.id]);
 
     for (const archive of room.archives ?? []) {
-      await client.query(
+      await db.query(
         `insert into room_archives (id, classroom_id, export_version, payload_json, archived_at)
          values ($1, $2, $3, $4::jsonb, $5)`,
         [
@@ -226,7 +224,7 @@ export async function createPostgresRepository(connectionString) {
   }
 
   async function queryRoomById(roomId) {
-    const result = await client.query(
+    const result = await pool.query(
       `select snapshots.payload_json as payload
        from classrooms
        join classroom_runtime_snapshots as snapshots
@@ -239,7 +237,7 @@ export async function createPostgresRepository(connectionString) {
   }
 
   async function queryRoomMetaById(roomId) {
-    const result = await client.query(
+    const result = await pool.query(
       `select id, code, name, teacher_name as "teacherName", status
        from classrooms
        where id = $1`,
@@ -250,7 +248,7 @@ export async function createPostgresRepository(connectionString) {
   }
 
   async function queryRoomMetaByCode(roomCode) {
-    const result = await client.query(
+    const result = await pool.query(
       `select id, code, name, teacher_name as "teacherName", status
        from classrooms
        where code = $1
@@ -262,7 +260,7 @@ export async function createPostgresRepository(connectionString) {
   }
 
   async function querySeasonByRoundNo(roomId, roundNo) {
-    const result = await client.query(
+    const result = await pool.query(
       `select id, classroom_id, round_no, status, event_id, module_flags, updated_at
        from room_seasons
        where classroom_id = $1 and round_no = $2
@@ -281,7 +279,7 @@ export async function createPostgresRepository(connectionString) {
     }
 
     const classroom = await queryRoomMetaById(roomId);
-    const result = await client.query(
+    const result = await pool.query(
       `select
          users.id as "studentId",
          users.display_name as "displayName",
@@ -330,7 +328,7 @@ export async function createPostgresRepository(connectionString) {
     }
 
     const classroom = await queryRoomMetaById(roomId);
-    const result = await client.query(
+    const result = await pool.query(
       `select
          users.id as "studentId",
          users.display_name as "displayName",
@@ -379,14 +377,14 @@ export async function createPostgresRepository(connectionString) {
 
   async function queryTeacherHistoryBundle(roomId) {
     const classroom = await queryRoomMetaById(roomId);
-    const roundRows = await client.query(
+    const roundRows = await pool.query(
       `select round_no, event_id, updated_at, module_flags
        from room_seasons
        where classroom_id = $1
        order by round_no desc`,
       [roomId]
     );
-    const archiveRows = await client.query(
+    const archiveRows = await pool.query(
       `select payload_json as payload
        from room_archives
        where classroom_id = $1
@@ -426,7 +424,7 @@ export async function createPostgresRepository(connectionString) {
       return null;
     }
 
-    const latestSeasonResult = await client.query(
+    const latestSeasonResult = await pool.query(
       `select round_no, status, event_id, module_flags, updated_at
        from room_seasons
        where classroom_id = $1
@@ -460,10 +458,11 @@ export async function createPostgresRepository(connectionString) {
         syncRound = true,
         syncArchives = true
       } = options;
+      const transactionClient = await pool.connect();
 
       try {
-        await client.query("begin");
-        await client.query(
+        await transactionClient.query("begin");
+        await transactionClient.query(
           `insert into classrooms (id, code, name, teacher_name, status)
            values ($1, $2, $3, $4, $5)
            on conflict (id)
@@ -474,7 +473,7 @@ export async function createPostgresRepository(connectionString) {
              status = excluded.status`,
           [room.id, room.code, room.name, room.teacherName, room.round?.status ?? room.status ?? "draft"]
         );
-        await client.query(
+        await transactionClient.query(
           `insert into classroom_runtime_snapshots (classroom_id, payload_json, updated_at)
            values ($1, $2::jsonb, now())
            on conflict (classroom_id)
@@ -485,27 +484,29 @@ export async function createPostgresRepository(connectionString) {
         );
 
         if (syncStudents) {
-          await syncNormalizedStudentTables(room);
+          await syncNormalizedStudentTables(room, transactionClient);
         }
         if (syncRound) {
-          await syncRoundRuntimeTables(room);
+          await syncRoundRuntimeTables(room, transactionClient);
         }
         if (syncArchives) {
-          await syncArchiveTables(room);
+          await syncArchiveTables(room, transactionClient);
         }
 
-        await client.query("commit");
+        await transactionClient.query("commit");
         return room;
       } catch (error) {
-        await client.query("rollback");
+        await transactionClient.query("rollback").catch(() => {});
         throw error;
+      } finally {
+        transactionClient.release();
       }
     },
     async getRoom(roomId) {
       return queryRoomById(roomId);
     },
     async findRoomByCode(roomCode) {
-      const result = await client.query(
+      const result = await pool.query(
         `select snapshots.payload_json as payload
          from classrooms
          join classroom_runtime_snapshots as snapshots
@@ -516,7 +517,7 @@ export async function createPostgresRepository(connectionString) {
       return result.rows[0]?.payload ?? null;
     },
     async listRooms() {
-      const result = await client.query(
+      const result = await pool.query(
         `select id, code, name, teacher_name as "teacherName", status
          from classrooms
          order by created_at desc`
@@ -524,7 +525,7 @@ export async function createPostgresRepository(connectionString) {
       return result.rows;
     },
     async saveSession(session) {
-      await client.query(
+      await pool.query(
         `insert into auth_sessions (token, role, user_id, classroom_id, payload_json, updated_at)
          values ($1, $2, $3, $4, $5::jsonb, now())
          on conflict (token)
@@ -539,7 +540,7 @@ export async function createPostgresRepository(connectionString) {
       return session;
     },
     async getSession(token) {
-      const result = await client.query(
+      const result = await pool.query(
         `select payload_json as payload
          from auth_sessions
          where token = $1`,
@@ -548,12 +549,12 @@ export async function createPostgresRepository(connectionString) {
       return result.rows[0]?.payload ?? null;
     },
     async serialize() {
-      const roomRows = await client.query(
+      const roomRows = await pool.query(
         `select payload_json as payload
          from classroom_runtime_snapshots
          order by updated_at desc`
       );
-      const sessionRows = await client.query(
+      const sessionRows = await pool.query(
         `select payload_json as payload
          from auth_sessions
          order by updated_at desc`
@@ -576,33 +577,33 @@ export async function createPostgresRepository(connectionString) {
       return queryScreenBundle(roomCode);
     },
     async cleanupRoomStorage(roomId, keepRoundNo) {
-      await client.query("delete from room_archives where classroom_id = $1", [roomId]);
+      await pool.query("delete from room_archives where classroom_id = $1", [roomId]);
 
-      await client.query(
+      await pool.query(
         `delete from round_ledgers
          where season_id in (
            select id from room_seasons where classroom_id = $1 and round_no <> $2
          )`,
         [roomId, keepRoundNo]
       );
-      await client.query(
+      await pool.query(
         `delete from round_random_events
          where season_id in (
            select id from room_seasons where classroom_id = $1 and round_no <> $2
          )`,
         [roomId, keepRoundNo]
       );
-      await client.query(
+      await pool.query(
         `delete from round_decisions
          where season_id in (
            select id from room_seasons where classroom_id = $1 and round_no <> $2
          )`,
         [roomId, keepRoundNo]
       );
-      await client.query("delete from room_seasons where classroom_id = $1 and round_no <> $2", [roomId, keepRoundNo]);
+      await pool.query("delete from room_seasons where classroom_id = $1 and round_no <> $2", [roomId, keepRoundNo]);
     },
     async close() {
-      await client.end();
+      await pool.end();
     }
   };
 }
