@@ -147,6 +147,15 @@ const familyConfig = {
   monthlySupport: 900
 };
 
+const normalizedFamilyStages: Record<string, "single" | "engaged" | "married"> = {
+  single: "single",
+  engaged: "engaged",
+  married: "married",
+  单身: "single",
+  订婚: "engaged",
+  已婚: "married"
+};
+
 const consumeCatalog = [
   { key: "travel", label: "旅行与休闲", amount: 2000, scoreGain: 66.7 },
   { key: "course", label: "课程学习", amount: 3000, scoreGain: 100 },
@@ -170,6 +179,10 @@ function toNumber(value: string | number | undefined) {
 
 function roundCurrency(value: number) {
   return Number(value.toFixed(2));
+}
+
+function normalizeFamilyStage(stage?: string) {
+  return normalizedFamilyStages[stage ?? ""] ?? "single";
 }
 
 function calcEmergencyMonths(cash: number, mandatoryCost: number) {
@@ -259,7 +272,7 @@ export function buildDecisionPreview({
       (draft.buyVehicle ? vehicleConfig.downPayment : 0) +
       (draft.buyHouse ? houseConfig.downPayment : 0)
   );
-  const currentFamilyStage = student.family?.stage ?? "single";
+  const currentFamilyStage = normalizeFamilyStage(student.family?.stage);
   const plannedLifecycleSetup = roundCurrency(
     (draft.engagementPrep && currentFamilyStage === "single" ? familyConfig.engagementCost : 0) +
       (draft.weddingPlan && currentFamilyStage !== "married"
@@ -320,7 +333,7 @@ export function buildDecisionPreview({
           monthlySupport: 0
         }
       : {
-          stage: student.family?.stage ?? "single",
+          stage: currentFamilyStage,
           monthlySupport: student.family?.monthlySupport ?? 0
         };
 
